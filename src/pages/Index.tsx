@@ -71,14 +71,13 @@ const Index = () => {
               ]}
               careerComponents={[
                 <EmploymentDetails joinedDate={employee.joinedDate} isLoading={isLoading} />,
-                <CareerProgression progression={employee.progression} isLoading={isLoading} />
+                <CareerProgression progression={employee.progression} />
               ]}
               metricsComponents={[
-                <FeedbackSection feedback={employee.feedback} isLoading={isLoading} />,
+                <FeedbackSection feedback={employee.feedback} />,
                 <CalibrationData 
                   performancePotentialGrid={employee.calibration.performancePotentialGrid}
                   skillLevels={employee.calibration.skillLevels}
-                  isLoading={isLoading}
                 />
               ]}
             />
@@ -94,13 +93,11 @@ const Index = () => {
               techAdvisor={employee.people.techAdvisor}
               teamMembers={employee.people.teamMembers}
               role={employee.role}
-              isLoading={isLoading}
             />
             <SkillsDisplay 
               skills={employee.skills} 
               role={employee.role} 
               onUpdate={handleUpdateSkills}
-              isLoading={isLoading}
             />
           </div>
         </div>

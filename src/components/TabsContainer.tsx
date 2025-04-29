@@ -1,7 +1,8 @@
+
 import React, { useState, Suspense } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LayoutList, User, Briefcase } from "lucide-react";
+import { User, Briefcase, LayoutList } from "lucide-react";
 import ChartBarIcon from './ChartBarIcon';
 
 interface TabsContainerProps {
@@ -17,7 +18,7 @@ const TabsContainer: React.FC<TabsContainerProps> = ({
   careerComponents,
   metricsComponents,
 }) => {
-  const [activeTab, setActiveTab] = useState("about");
+  const [activeTab, setActiveTab] = useState("person");
 
   const TabSkeleton = () => (
     <div className="space-y-4">
@@ -29,14 +30,10 @@ const TabsContainer: React.FC<TabsContainerProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-4 mb-6 w-full">
-        <TabsTrigger value="about" className="flex items-center gap-2">
+      <TabsList className="grid grid-cols-3 mb-6 w-full">
+        <TabsTrigger value="person" className="flex items-center gap-2">
           <User size={16} />
-          <span>About</span>
-        </TabsTrigger>
-        <TabsTrigger value="personal" className="flex items-center gap-2">
-          <LayoutList size={16} />
-          <span>Personal</span>
+          <span>Person</span>
         </TabsTrigger>
         <TabsTrigger value="career" className="flex items-center gap-2">
           <Briefcase size={16} />
@@ -48,14 +45,9 @@ const TabsContainer: React.FC<TabsContainerProps> = ({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="about" className="space-y-6">
+      <TabsContent value="person" className="space-y-6">
         <Suspense fallback={<TabSkeleton />}>
           {aboutComponent}
-        </Suspense>
-      </TabsContent>
-      
-      <TabsContent value="personal" className="space-y-6">
-        <Suspense fallback={<TabSkeleton />}>
           {personalInfoComponents.map((component, index) => (
             <React.Fragment key={`personal-${index}`}>{component}</React.Fragment>
           ))}
