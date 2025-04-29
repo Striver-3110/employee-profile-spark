@@ -45,6 +45,9 @@ const Index = () => {
     }));
   };
 
+  // Mock date for last calibration update
+  const lastCalibrationUpdate = new Date(2025, 1, 15); // February 15, 2025
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
@@ -78,6 +81,7 @@ const Index = () => {
                 <CalibrationData 
                   performancePotentialGrid={employee.calibration.performancePotentialGrid}
                   skillLevels={employee.calibration.skillLevels}
+                  lastUpdated={lastCalibrationUpdate}
                 />
               ]}
             />

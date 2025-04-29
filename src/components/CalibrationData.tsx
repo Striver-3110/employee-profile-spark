@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from 'date-fns';
 
 interface CalibrationProps {
   performancePotentialGrid: {
@@ -11,9 +12,14 @@ interface CalibrationProps {
     skill: string;
     level: number;
   }[];
+  lastUpdated?: Date; // Optional date when the calibration was last updated
 }
 
-const CalibrationData: React.FC<CalibrationProps> = ({ performancePotentialGrid, skillLevels }) => {
+const CalibrationData: React.FC<CalibrationProps> = ({ 
+  performancePotentialGrid, 
+  skillLevels,
+  lastUpdated = new Date() // Default to current date if not provided
+}) => {
   // Get position in 9-grid
   const getGridPosition = () => {
     const { performance, potential } = performancePotentialGrid;
@@ -31,10 +37,7 @@ const CalibrationData: React.FC<CalibrationProps> = ({ performancePotentialGrid,
   };
 
   const { row, col } = getGridPosition();
-  
-  // Labels for the 9-grid
-  const performanceLabels = ["Low", "Medium", "High"];
-  const potentialLabels = ["Low", "Medium", "High"];
+  const formattedDate = format(lastUpdated, 'MMMM dd, yyyy');
   
   // Generate skill level bar width percentage
   const getSkillLevelWidth = (level: number) => {
@@ -43,61 +46,30 @@ const CalibrationData: React.FC<CalibrationProps> = ({ performancePotentialGrid,
 
   return (
     <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Performance & Skills Calibration</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Thrive 360</CardTitle>
+        <div className="text-sm text-muted-foreground">Last updated on: {formattedDate}</div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 9-Box Grid */}
+          {/* 9-Box Grid using image */}
           <div>
             <h3 className="font-medium mb-4">Performance & Potential Matrix</h3>
             <div className="relative">
-              {/* Y-axis label */}
-              <div className="absolute -left-24 top-1/2 transform -rotate-90 -translate-y-1/2 text-sm text-gray-500">
-                Performance
-              </div>
-              
-              {/* X-axis label */}
-              <div className="absolute bottom-[-24px] left-1/2 transform -translate-x-1/2 text-sm text-gray-500">
-                Potential
-              </div>
-              
-              <div className="grid grid-cols-3 gap-1 mb-1">
-                {potentialLabels.map((label, index) => (
-                  <div key={index} className="text-center text-xs text-gray-500">{label}</div>
-                ))}
-              </div>
-              
-              <div className="grid grid-cols-[auto_1fr] gap-1">
-                <div className="flex flex-col justify-between pr-1">
-                  {performanceLabels.map((label, index) => (
-                    <div key={index} className="text-xs text-gray-500 h-12 flex items-center">
-                      {label}
-                    </div>
-                  )).reverse() /* Reverse to show High at the top */}
-                </div>
-                
-                <div className="grid grid-rows-3 grid-cols-3 gap-1">
-                  {Array.from({ length: 9 }).map((_, index) => {
-                    const gridRow = Math.floor(index / 3);
-                    const gridCol = index % 3;
-                    const isHighlighted = 2 - gridRow === row && gridCol === col;
-                    
-                    return (
-                      <div 
-                        key={index} 
-                        className={`h-12 rounded flex items-center justify-center
-                          ${isHighlighted 
-                            ? 'bg-blue-500 text-white font-medium' 
-                            : 'bg-gray-100 text-gray-400'}
-                        `}
-                      >
-                        {isHighlighted && '●'}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <img 
+                src="/lovable-uploads/ce35a4bd-9e44-498a-82a3-dd40b9261d93.png" 
+                alt="9-box performance and potential grid" 
+                className="w-full h-auto rounded-md shadow-sm" 
+              />
+              <div className="absolute" style={{
+                top: `${33.3 * (2 - row)}%`, 
+                left: `${33.3 * col}%`,
+                width: '33.3%',
+                height: '33.3%',
+                border: '2px solid #FF6B6B',
+                borderRadius: '4px',
+                pointerEvents: 'none'
+              }} />
             </div>
           </div>
           
