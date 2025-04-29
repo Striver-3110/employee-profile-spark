@@ -45,16 +45,16 @@ const CalibrationData: React.FC<CalibrationProps> = ({
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="hover:shadow-md transition-shadow duration-300 overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
         <CardTitle>Thrive 360</CardTitle>
         <div className="text-sm text-muted-foreground">Last updated on: {formattedDate}</div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 9-Box Grid using image */}
-          <div>
-            <h3 className="font-medium mb-4">Performance & Potential Matrix</h3>
+          <div className="bg-white p-4 rounded-lg">
+            <h3 className="font-medium mb-4 text-blue-800">Performance & Potential Matrix</h3>
             <div className="relative">
               <img 
                 src="/lovable-uploads/ce35a4bd-9e44-498a-82a3-dd40b9261d93.png" 
@@ -66,7 +66,7 @@ const CalibrationData: React.FC<CalibrationProps> = ({
                 left: `${33.3 * col}%`,
                 width: '33.3%',
                 height: '33.3%',
-                border: '2px solid #FF6B6B',
+                border: '3px solid #4F46E5',
                 borderRadius: '4px',
                 pointerEvents: 'none'
               }} />
@@ -74,8 +74,8 @@ const CalibrationData: React.FC<CalibrationProps> = ({
           </div>
           
           {/* Skill Levels */}
-          <div>
-            <h3 className="font-medium mb-4">Skill Calibration Levels</h3>
+          <div className="bg-white p-4 rounded-lg">
+            <h3 className="font-medium mb-4 text-blue-800">Skill Calibration Levels</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -86,17 +86,17 @@ const CalibrationData: React.FC<CalibrationProps> = ({
                 </thead>
                 <tbody>
                   {skillLevels.map((skillLevel, index) => (
-                    <tr key={index} className="border-t">
+                    <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : ""}>
                       <td className="py-3 pr-4">{skillLevel.skill}</td>
                       <td className="py-3 w-1/2">
                         <div className="flex items-center">
                           <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
                             <div 
-                              className="bg-blue-600 h-2.5 rounded-full" 
+                              className="bg-indigo-600 h-2.5 rounded-full" 
                               style={{ width: getSkillLevelWidth(skillLevel.level) }}
                             />
                           </div>
-                          <span className="text-sm">
+                          <span className="text-sm font-medium">
                             {skillLevel.level > 0 ? `L${skillLevel.level}` : 'L0'}
                           </span>
                         </div>

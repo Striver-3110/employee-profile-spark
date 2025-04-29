@@ -57,22 +57,22 @@ const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate,
   }
 
   return (
-    <Card className="mb-6 hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="hover:shadow-md transition-shadow duration-300 overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50">
         <CardTitle>Creative Pursuits</CardTitle>
-        <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
+        <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)} className="bg-white hover:bg-gray-100">
           <Plus size={16} className="mr-1" /> Add
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         {pursuits.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {pursuits.map((pursuit, index) => (
-              <div key={index} className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1">
-                <span>{pursuit}</span>
+              <div key={index} className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full px-4 py-2 shadow-sm">
+                <span className="font-medium">{pursuit}</span>
                 <button 
                   onClick={() => handleRemovePursuit(index)}
-                  className="text-gray-500 hover:text-red-500"
+                  className="text-gray-500 hover:text-red-500 transition-colors"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -80,7 +80,7 @@ const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate,
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">No creative pursuits added yet.</p>
+          <p className="text-gray-500 text-sm italic">No creative pursuits added yet.</p>
         )}
       </CardContent>
       

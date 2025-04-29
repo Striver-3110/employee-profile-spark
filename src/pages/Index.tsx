@@ -49,15 +49,18 @@ const Index = () => {
   const lastCalibrationUpdate = new Date(2025, 1, 15); // February 15, 2025
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <Toaster position="top-right" />
       <div className="container mx-auto py-8 px-4">
-        <ProfileHeader 
-          name={employee.name}
-          image={employee.image}
-          designation={employee.designation}
-          socialLinks={employee.socialLinks}
-        />
+        {/* Profile header with larger size and improved styling */}
+        <div className="mb-8 bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+          <ProfileHeader 
+            name={employee.name}
+            image={employee.image}
+            designation={employee.designation}
+            socialLinks={employee.socialLinks}
+          />
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content with tabs */}
@@ -87,22 +90,26 @@ const Index = () => {
             />
           </div>
           
-          {/* Right column - kept outside tabs */}
+          {/* Right column - improved styling */}
           <div className="space-y-6">
-            <MyPeople 
-              team={employee.people.team}
-              pod={employee.people.pod}
-              lead={employee.people.lead}
-              buddy={employee.people.buddy}
-              techAdvisor={employee.people.techAdvisor}
-              teamMembers={employee.people.teamMembers}
-              role={employee.role}
-            />
-            <SkillsDisplay 
-              skills={employee.skills} 
-              role={employee.role} 
-              onUpdate={handleUpdateSkills}
-            />
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+              <MyPeople 
+                team={employee.people.team}
+                pod={employee.people.pod}
+                lead={employee.people.lead}
+                buddy={employee.people.buddy}
+                techAdvisor={employee.people.techAdvisor}
+                teamMembers={employee.people.teamMembers}
+                role={employee.role}
+              />
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+              <SkillsDisplay 
+                skills={employee.skills} 
+                role={employee.role} 
+                onUpdate={handleUpdateSkills}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -33,26 +33,26 @@ const Icebreakers: React.FC<IcebreakersProps> = ({ icebreakers, isLoading = fals
   }
 
   return (
-    <Card className="mb-6 hover:shadow-md transition-shadow duration-300">
-      <CardHeader>
+    <Card className="hover:shadow-md transition-shadow duration-300 overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
         <CardTitle>Ice Breakers</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         {icebreakers.length > 0 ? (
           <Accordion type="single" collapsible className="w-full">
             {icebreakers.map((icebreaker, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left">
+                <AccordionTrigger className="text-left hover:bg-blue-50 px-4 py-3 rounded-lg">
                   {icebreaker.question}
                 </AccordionTrigger>
-                <AccordionContent>
+                <AccordionContent className="px-4 py-3 bg-gray-50 rounded-lg mt-1">
                   <p className="text-gray-700">{icebreaker.answer}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
         ) : (
-          <p className="text-gray-500 text-sm">No ice breakers available.</p>
+          <p className="text-gray-500 text-sm italic">No ice breakers available.</p>
         )}
       </CardContent>
     </Card>
