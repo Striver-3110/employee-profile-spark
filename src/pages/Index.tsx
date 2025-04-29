@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutMe from "@/components/AboutMe";
 import EmploymentDetails from "@/components/EmploymentDetails";
@@ -10,11 +10,22 @@ import SkillsDisplay from "@/components/SkillsDisplay";
 import CareerProgression from "@/components/CareerProgression";
 import FeedbackSection from "@/components/FeedbackSection";
 import CalibrationData from "@/components/CalibrationData";
+import TabsContainer from "@/components/TabsContainer";
 import { employeeData } from "@/data/mockData";
 import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
   const [employee, setEmployee] = useState(employeeData);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Simulate loading state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   // Handlers for updating employee data
   const handleUpdateCreativePursuits = (pursuits: string[]) => {
@@ -46,20 +57,34 @@ const Index = () => {
         />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left column */}
-          <div className="lg:col-span-2 space-y-6">
-            <AboutMe about={employee.about} />
-            <EmploymentDetails joinedDate={employee.joinedDate} />
-            <CreativePursuits 
-              pursuits={employee.creativePursuits} 
-              onUpdate={handleUpdateCreativePursuits} 
+          {/* Main content with tabs */}
+          <div className="lg:col-span-2">
+            <TabsContainer 
+              aboutComponent={<AboutMe about={employee.about} isLoading={isLoading} />}
+              personalInfoComponents={[
+                <CreativePursuits 
+                  pursuits={employee.creativePursuits} 
+                  onUpdate={handleUpdateCreativePursuits}
+                  isLoading={isLoading} 
+                />,
+                <Icebreakers icebreakers={employee.icebreakers} isLoading={isLoading} />
+              ]}
+              careerComponents={[
+                <EmploymentDetails joinedDate={employee.joinedDate} isLoading={isLoading} />,
+                <CareerProgression progression={employee.progression} isLoading={isLoading} />
+              ]}
+              metricsComponents={[
+                <FeedbackSection feedback={employee.feedback} isLoading={isLoading} />,
+                <CalibrationData 
+                  performancePotentialGrid={employee.calibration.performancePotentialGrid}
+                  skillLevels={employee.calibration.skillLevels}
+                  isLoading={isLoading}
+                />
+              ]}
             />
-            <Icebreakers icebreakers={employee.icebreakers} />
-            <CareerProgression progression={employee.progression} />
-            <FeedbackSection feedback={employee.feedback} />
           </div>
           
-          {/* Right column */}
+          {/* Right column - kept outside tabs */}
           <div className="space-y-6">
             <MyPeople 
               team={employee.people.team}
@@ -69,15 +94,13 @@ const Index = () => {
               techAdvisor={employee.people.techAdvisor}
               teamMembers={employee.people.teamMembers}
               role={employee.role}
+              isLoading={isLoading}
             />
             <SkillsDisplay 
               skills={employee.skills} 
               role={employee.role} 
-              onUpdate={handleUpdateSkills} 
-            />
-            <CalibrationData 
-              performancePotentialGrid={employee.calibration.performancePotentialGrid}
-              skillLevels={employee.calibration.skillLevels}
+              onUpdate={handleUpdateSkills}
+              isLoading={isLoading}
             />
           </div>
         </div>

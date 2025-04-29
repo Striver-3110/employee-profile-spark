@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
 import { DialogComponent } from './ui/dialog-content';
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CreativePursuitsProps {
   pursuits: string[];
   onUpdate: (pursuits: string[]) => void;
+  isLoading?: boolean;
 }
 
-const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate }) => {
+const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate, isLoading = false }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newPursuit, setNewPursuit] = useState('');
   
@@ -35,8 +37,27 @@ const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate 
     toast.success("Creative pursuit removed successfully!");
   };
 
+  if (isLoading) {
+    return (
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-10 w-20" />
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+            <Skeleton className="h-8 w-16 rounded-full" />
+            <Skeleton className="h-8 w-28 rounded-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 hover:shadow-md transition-shadow duration-300">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Creative Pursuits</CardTitle>
         <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
