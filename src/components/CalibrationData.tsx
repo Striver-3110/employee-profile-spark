@@ -44,6 +44,17 @@ const CalibrationData: React.FC<CalibrationProps> = ({
     return `${(level / 5) * 100}%`;
   };
 
+  // 9-box grid labels
+  const potentialLabels = ['Low Potential', 'Moderate Potential', 'High Potential'];
+  const performanceLabels = ['Low Performance', 'Solid Performance', 'High Performance'];
+
+  // Grid cell descriptions
+  const gridDescriptions = [
+    ['Underperformer', 'Potential Risk', 'Enigma'],
+    ['Value Player', 'Core Player', 'High Potential'],
+    ['Specialized Expert', 'Consistent Star', 'Top Talent']
+  ];
+
   return (
     <Card className="hover:shadow-md transition-shadow duration-300 overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -52,24 +63,50 @@ const CalibrationData: React.FC<CalibrationProps> = ({
       </CardHeader>
       <CardContent className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 9-Box Grid using image */}
+          {/* 9-Box Grid using CSS grid */}
           <div className="bg-white p-4 rounded-lg">
             <h3 className="font-medium mb-4 text-blue-800">Performance & Potential Matrix</h3>
             <div className="relative">
-              <img 
-                src="/lovable-uploads/ce35a4bd-9e44-498a-82a3-dd40b9261d93.png" 
-                alt="9-box performance and potential grid" 
-                className="w-full h-auto rounded-md shadow-sm" 
-              />
-              <div className="absolute" style={{
-                top: `${33.3 * (2 - row)}%`, 
-                left: `${33.3 * col}%`,
-                width: '33.3%',
-                height: '33.3%',
-                border: '3px solid #4F46E5',
-                borderRadius: '4px',
-                pointerEvents: 'none'
-              }} />
+              {/* Grid layout */}
+              <div className="grid grid-cols-3 grid-rows-3 gap-1 border border-gray-200 rounded-md p-1 bg-gray-50">
+                {[...Array(9)].map((_, index) => {
+                  const gridRow = Math.floor(index / 3);
+                  const gridCol = index % 3;
+                  const isSelected = gridRow === 2 - row && gridCol === col;
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={`
+                        flex flex-col items-center justify-center p-2 h-20 text-center
+                        ${isSelected ? 'bg-indigo-100 border-2 border-indigo-600' : 'bg-white border border-gray-200'}
+                        ${gridRow === 2 ? 'bg-opacity-70 bg-green-50' : ''}
+                        ${gridRow === 1 ? 'bg-opacity-70 bg-yellow-50' : ''}
+                        ${gridRow === 0 ? 'bg-opacity-70 bg-red-50' : ''}
+                        transition-all hover:shadow-sm
+                      `}
+                    >
+                      <span className="text-xs font-medium">
+                        {gridDescriptions[gridRow][gridCol]}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Performance axis (vertical) */}
+              <div className="absolute -left-24 top-0 h-full flex flex-col justify-between items-end">
+                {performanceLabels.map((label, index) => (
+                  <div key={index} className="text-xs text-gray-600 pr-2">{label}</div>
+                ))}
+              </div>
+              
+              {/* Potential axis (horizontal) */}
+              <div className="absolute top-full left-0 w-full flex justify-between mt-2">
+                {potentialLabels.map((label, index) => (
+                  <div key={index} className="text-xs text-gray-600">{label}</div>
+                ))}
+              </div>
             </div>
           </div>
           
