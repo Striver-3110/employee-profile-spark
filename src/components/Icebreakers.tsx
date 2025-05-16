@@ -1,8 +1,13 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { MessageSquare, SkipBack, CheckCheck } from "lucide-react";
 
 interface Icebreaker {
   question: string;
@@ -12,9 +17,107 @@ interface Icebreaker {
 interface IcebreakersProps {
   icebreakers: Icebreaker[];
   isLoading?: boolean;
+  onUpdate?: (icebreakers: Icebreaker[]) => void;
 }
 
-const Icebreakers: React.FC<IcebreakersProps> = ({ icebreakers, isLoading = false }) => {
+// A list of 30 icebreaker questions
+const allIcebreakerQuestions = [
+  "What's your favorite book and why?",
+  "If you could have dinner with any historical figure, who would it be?",
+  "What's your ideal weekend activity?",
+  "If you could instantly master any skill, what would it be?",
+  "What's the best advice you've ever received?",
+  "What's your favorite travel destination?",
+  "What hobby would you get into if time and money weren't an issue?",
+  "What fictional world would you most like to live in?",
+  "What's something you've always wanted to try but haven't yet?",
+  "What three items would you take to a deserted island?",
+  "What's your go-to productivity hack?",
+  "What was your first job and what did you learn from it?",
+  "What's your favorite way to unwind after work?",
+  "What's the most memorable concert or live event you've attended?",
+  "If you could instantly learn any language, which would you choose?",
+  "What's a cause you're passionate about?",
+  "What's your favorite family tradition?",
+  "What's the most beautiful place you've ever visited?",
+  "What's something people would be surprised to learn about you?",
+  "If you could have any superpower, what would it be?",
+  "What's the most adventurous thing you've ever done?",
+  "What would be your ideal three-course meal?",
+  "If you could live in any era of history, which would you choose?",
+  "What's a skill you'd like to develop this year?",
+  "What was the last book that deeply impacted you?",
+  "If you could swap lives with anyone for a day, who would it be?",
+  "What's the best piece of professional advice you've received?",
+  "What's your favorite childhood memory?",
+  "If you could solve one global problem, what would it be?",
+  "What technology innovation are you most excited about?"
+];
+
+const Icebreakers: React.FC<IcebreakersProps> = ({ 
+  icebreakers, 
+  isLoading = false,
+  onUpdate 
+}) => {
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [currentAnswer, setCurrentAnswer] = useState('');
+  const [questionStep, setQuestionStep] = useState(0);
+  
+  const startQuestionnaire = () => {
+    // Randomly select 5 questions
+    const shuffled = [...allIcebreakerQuestions].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 5);
+    setSelectedQuestions(selected);
+    setCurrentQuestionIndex(0);
+    setAnswers({});
+    setCurrentAnswer('');
+    setQuestionStep(1);
+    setShowQuestionnaire(true);
+  };
+  
+  const handleSkip = () => {
+    // If we're on the last question, don't allow skip
+    if (currentQuestionIndex < selectedQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentAnswer('');
+    }
+  };
+  
+  const handleNext = () => {
+    // Save current answer
+    setAnswers(prev => ({
+      ...prev,
+      [selectedQuestions[currentQuestionIndex]]: currentAnswer
+    }));
+    
+    // Move to next question or finish
+    if (currentQuestionIndex < selectedQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentAnswer('');
+    } else {
+      setQuestionStep(2); // Move to submission step
+    }
+  };
+  
+  const handleSubmit = () => {
+    // Create new icebreakers from the answers
+    const newIcebreakers = Object.entries(answers).map(([question, answer]) => ({
+      question,
+      answer
+    }));
+    
+    if (onUpdate) {
+      onUpdate(newIcebreakers);
+    }
+    
+    toast.success("Icebreaker answers submitted!");
+    setShowQuestionnaire(false);
+    setQuestionStep(0);
+  };
+
   if (isLoading) {
     return (
       <Card className="mb-6">
@@ -52,9 +155,86 @@ const Icebreakers: React.FC<IcebreakersProps> = ({ icebreakers, isLoading = fals
             ))}
           </Accordion>
         ) : (
-          <p className="text-gray-500 text-sm italic">No ice breakers available.</p>
+          <div className="text-center py-6">
+            <MessageSquare className="h-12 w-12 mx-auto mb-3 text-blue-400" />
+            <p className="text-gray-500 mb-4">Share some fun facts about yourself with your team!</p>
+            <Button onClick={startQuestionnaire}>
+              Start Questionnaire
+            </Button>
+          </div>
         )}
       </CardContent>
+
+      {/* Icebreaker Questionnaire Dialog */}
+      <Dialog open={showQuestionnaire} onOpenChange={setShowQuestionnaire}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {questionStep === 1 
+                ? `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}` 
+                : 'Review Your Answers'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {questionStep === 1 ? (
+            <div className="py-4">
+              <h3 className="text-lg font-medium mb-3">{selectedQuestions[currentQuestionIndex]}</h3>
+              <Textarea
+                value={currentAnswer}
+                onChange={(e) => setCurrentAnswer(e.target.value)}
+                placeholder="Type your answer here..."
+                className="min-h-[120px] mb-4"
+              />
+              
+              <div className="flex justify-between">
+                <Button 
+                  variant="outline" 
+                  onClick={handleSkip}
+                  disabled={currentQuestionIndex === selectedQuestions.length - 1}
+                  className="gap-1"
+                >
+                  <SkipBack size={16} />
+                  Skip
+                </Button>
+                <Button 
+                  onClick={handleNext}
+                  disabled={!currentAnswer.trim()}
+                >
+                  {currentQuestionIndex === selectedQuestions.length - 1 ? 'Review' : 'Next'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="py-4">
+              <div className="max-h-[300px] overflow-y-auto mb-4">
+                {selectedQuestions.map((question, index) => (
+                  <div key={index} className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium mb-1">{question}</h4>
+                    <p className="text-gray-700">{answers[question]}</p>
+                  </div>
+                ))}
+              </div>
+              
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setQuestionStep(1);
+                    setCurrentQuestionIndex(selectedQuestions.length - 1);
+                    setCurrentAnswer(answers[selectedQuestions[selectedQuestions.length - 1]] || '');
+                  }}
+                >
+                  Back
+                </Button>
+                <Button onClick={handleSubmit} className="gap-1">
+                  <CheckCheck size={16} />
+                  Submit
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

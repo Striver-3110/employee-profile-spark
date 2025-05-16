@@ -28,10 +28,24 @@ const Index = () => {
   }, []);
   
   // Handlers for updating employee data
+  const handleUpdateAbout = (newAbout: string) => {
+    setEmployee(prev => ({
+      ...prev,
+      about: newAbout
+    }));
+  };
+  
   const handleUpdateCreativePursuits = (pursuits: string[]) => {
     setEmployee((prev) => ({
       ...prev,
       creativePursuits: pursuits,
+    }));
+  };
+  
+  const handleUpdateIcebreakers = (icebreakers: { question: string, answer: string }[]) => {
+    setEmployee((prev) => ({
+      ...prev,
+      icebreakers: icebreakers,
     }));
   };
   
@@ -66,14 +80,24 @@ const Index = () => {
           {/* Main content with tabs */}
           <div className="lg:col-span-2">
             <TabsContainer 
-              aboutComponent={<AboutMe about={employee.about} isLoading={isLoading} />}
+              aboutComponent={
+                <AboutMe 
+                  about={employee.about} 
+                  isLoading={isLoading} 
+                  onUpdate={handleUpdateAbout} 
+                />
+              }
               personalInfoComponents={[
                 <CreativePursuits 
                   pursuits={employee.creativePursuits} 
                   onUpdate={handleUpdateCreativePursuits}
                   isLoading={isLoading} 
                 />,
-                <Icebreakers icebreakers={employee.icebreakers} isLoading={isLoading} />
+                <Icebreakers 
+                  icebreakers={employee.icebreakers} 
+                  isLoading={isLoading} 
+                  onUpdate={handleUpdateIcebreakers}
+                />
               ]}
               careerComponents={[
                 <EmploymentDetails joinedDate={employee.joinedDate} isLoading={isLoading} />,

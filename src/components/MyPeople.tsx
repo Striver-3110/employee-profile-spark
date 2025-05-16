@@ -1,7 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { User } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+interface TeamMember {
+  name: string;
+  role: string;
+}
 
 interface MyPeopleProps {
   team: string;
@@ -22,6 +30,8 @@ const MyPeople: React.FC<MyPeopleProps> = ({
   teamMembers,
   role
 }) => {
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  
   // Function to get initials for avatar
   const getInitials = (name: string) => {
     return name
@@ -33,6 +43,14 @@ const MyPeople: React.FC<MyPeopleProps> = ({
 
   const showTechAdvisor = role === 'tech';
   const showTeamDetails = role !== 'co-founder';
+
+  // Mock team members with roles (in a real app, these would come from the API)
+  const teamMembersWithRoles: TeamMember[] = teamMembers.map(name => ({
+    name,
+    role: name === lead ? "Team Lead" : 
+          name === buddy ? "Buddy" :
+          name === techAdvisor ? "Tech Advisor" : "Team Member"
+  }));
 
   if (!showTeamDetails) {
     return null; // Don't render anything for co-founders
@@ -68,12 +86,22 @@ const MyPeople: React.FC<MyPeopleProps> = ({
                 <p className="font-medium">{techAdvisor}</p>
               </div>
             )}
+            <div className="pt-2">
+              <Button 
+                onClick={() => setShowTeamModal(true)} 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <User size={16} />
+                <span>View Team</span>
+              </Button>
+            </div>
           </div>
 
           <div>
             <h3 className="text-sm text-gray-500 mb-2">Team Members</h3>
             <div className="flex flex-wrap gap-3">
-              {teamMembers.map((member, index) => (
+              {teamMembers.slice(0, 6).map((member, index) => (
                 <div key={index} className="flex flex-col items-center">
                   <Avatar className="mb-1">
                     <AvatarFallback>{getInitials(member)}</AvatarFallback>
@@ -81,9 +109,39 @@ const MyPeople: React.FC<MyPeopleProps> = ({
                   <span className="text-xs text-center">{member}</span>
                 </div>
               ))}
+              {teamMembers.length > 6 && (
+                <div className="flex flex-col items-center">
+                  <Avatar className="mb-1 bg-gray-200">
+                    <AvatarFallback>+{teamMembers.length - 6}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs text-center">More</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Team Members Modal */}
+        <Dialog open={showTeamModal} onOpenChange={setShowTeamModal}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Team Members</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto py-4">
+              {teamMembersWithRoles.map((member, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Avatar>
+                    <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{member.name}</p>
+                    <p className="text-sm text-muted-foreground">{member.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
