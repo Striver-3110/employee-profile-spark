@@ -17,10 +17,11 @@ interface SkillsDisplayProps {
     learning: string[];
   };
   role: string;
+  roleGroup: string;
   onUpdate: (category: string, skills: string[]) => void;
 }
 
-const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, onUpdate }) => {
+const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, onUpdate }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [newSkill, setNewSkill] = useState('');
@@ -33,11 +34,11 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, onUpdate })
   const beginnerRef = useRef<HTMLDivElement>(null);
   const learningRef = useRef<HTMLDivElement>(null);
 
-  // Determine if it's a tech or non-tech role
-  const isTechRole = role === 'tech';
-  const componentTitle = isTechRole ? 'Tech Stack' : 'Skill Set';
+  // Determine component title based on role group
+  const componentTitle = roleGroup === 'Technical Roles' ? 'Tech Stack' : 'Competency Map';
   
   // Get appropriate suggestions based on role
+  const isTechRole = roleGroup === 'Technical Roles';
   const suggestions = isTechRole ? skillSuggestions.tech : skillSuggestions.nonTech;
 
   // Get all skills across all categories

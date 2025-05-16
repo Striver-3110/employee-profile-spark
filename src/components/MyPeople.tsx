@@ -62,7 +62,7 @@ const MyPeople: React.FC<MyPeopleProps> = ({
         <CardTitle>My People</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <h3 className="text-sm text-gray-500">Team</h3>
             <p className="font-medium">{team}</p>
@@ -80,16 +80,16 @@ const MyPeople: React.FC<MyPeopleProps> = ({
             <p className="font-medium">{buddy}</p>
           </div>
           {showTechAdvisor && techAdvisor && (
-            <div>
+            <div className="col-span-1 sm:col-span-2">
               <h3 className="text-sm text-gray-500">Tech Advisor</h3>
               <p className="font-medium">{techAdvisor}</p>
             </div>
           )}
-          <div className="pt-2">
+          <div className="col-span-1 sm:col-span-2 pt-2">
             <Button 
               onClick={() => setShowTeamModal(true)} 
               variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-auto"
             >
               <User size={16} />
               <span>View Team</span>

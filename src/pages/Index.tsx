@@ -14,18 +14,116 @@ import TabsContainer from "@/components/TabsContainer";
 import { employeeData } from "@/data/mockData";
 import { Toaster } from "@/components/ui/sonner";
 
-const Index = () => {
-  const [employee, setEmployee] = useState(employeeData);
-  const [isLoading, setIsLoading] = useState(true);
+// Utility to determine role group
+const getRoleGroup = (role: string): string => {
+  const technicalRoles = [
+    'Software Craftsperson', 
+    'Software Craftsperson - Tech Lead', 
+    'Software Craftsperson - Tech Advisor',
+    'AI Craftsperson',
+    'Test Craftsperson',
+    'Test Craftsperson (Manual)',
+    'Test Craftsperson (Automation)',
+    'BQA',
+    'Intern',
+    'tech' // For backward compatibility
+  ];
   
-  // Simulate loading state
+  const designProductRoles = [
+    'Product Craftsperson',
+    'Product Kick-off Specialist',
+    'Product Manager',
+    'Product Analyst',
+    'Product Manager - Guild Lead',
+    'UI/UX Craftsperson',
+    'Content Manager'
+  ];
+  
+  const peopleOpsRoles = [
+    'People Success Manager',
+    'People Success Specialist',
+    'Talent Acquisition Specialist'
+  ];
+  
+  const opsStrategyRoles = [
+    'Operations Manager',
+    'Executive Assistant',
+    'Operation Head'
+  ];
+  
+  const financeAdminRoles = ['Accountant'];
+  
+  const leadershipRoles = [
+    'Engineer Manager',
+    'Co-Founder',
+    'Technical Program Manager',
+    'co-founder' // For backward compatibility
+  ];
+  
+  if (technicalRoles.includes(role)) return 'Technical Roles';
+  if (designProductRoles.includes(role)) return 'Design & Product';
+  if (peopleOpsRoles.includes(role)) return 'People Operations';
+  if (opsStrategyRoles.includes(role)) return 'Operations & Strategy';
+  if (financeAdminRoles.includes(role)) return 'Finance & Admin';
+  if (leadershipRoles.includes(role)) return 'Leadership / Founders';
+  
+  return 'Other Roles';
+};
+
+const Index = () => {
+  const [employee, setEmployee] = useState({
+    ...employeeData,
+    email: "john.doe@example.com",
+    phone: "+1 (123) 456-7890",
+    address: "123 Main St, San Francisco, CA",
+    feedback: {
+      ...employeeData.feedback,
+      initiated: [
+        {
+          recipient: "Sarah Johnson",
+          initiatedBy: "me",
+          initiatedDate: "2025-03-15T10:30:00",
+          status: "pending",
+          context: "Q1 Performance Review"
+        },
+        {
+          from: "Mike Chen",
+          initiatedBy: "other",
+          initiatedDate: "2025-03-20T14:45:00",
+          status: "completed",
+          context: "Project Collaboration Feedback"
+        },
+        {
+          recipient: "Lisa Wong",
+          initiatedBy: "me",
+          initiatedDate: "2025-02-10T09:15:00",
+          status: "completed",
+          context: "Peer Review"
+        },
+        {
+          from: "David Kim",
+          initiatedBy: "other",
+          initiatedDate: "2025-01-25T11:00:00",
+          status: "pending",
+          context: "Team Leadership Assessment"
+        }
+      ]
+    }
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [roleGroup, setRoleGroup] = useState('');
+  
   useEffect(() => {
+    // Set role group based on employee role
+    setRoleGroup(getRoleGroup(employee.role));
+    
+    // Simulate loading state
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 800);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [employee.role]);
   
   // Handlers for updating employee data
   const handleUpdateAbout = (newAbout: string) => {
@@ -65,18 +163,21 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <Toaster position="top-right" />
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-4 sm:py-8 px-4">
         {/* Profile header with larger size and improved styling */}
-        <div className="mb-8 bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+        <div className="mb-8 bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
           <ProfileHeader 
             name={employee.name}
             image={employee.image}
             designation={employee.designation}
+            email={employee.email}
+            phone={employee.phone}
+            address={employee.address}
             socialLinks={employee.socialLinks}
           />
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main content with tabs */}
           <div className="lg:col-span-2">
             <TabsContainer 
@@ -115,8 +216,8 @@ const Index = () => {
           </div>
           
           {/* Right column - improved styling */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
               <MyPeople 
                 team={employee.people.team}
                 pod={employee.people.pod}
@@ -127,10 +228,11 @@ const Index = () => {
                 role={employee.role}
               />
             </div>
-            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
               <SkillsDisplay 
                 skills={employee.skills} 
-                role={employee.role} 
+                role={employee.role}
+                roleGroup={roleGroup}
                 onUpdate={handleUpdateSkills}
               />
             </div>
