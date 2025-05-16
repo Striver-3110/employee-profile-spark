@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -65,24 +64,49 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [questionStep, setQuestionStep] = useState(0);
+  const [skippedQuestions, setSkippedQuestions] = useState<string[]>([]);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [remainingAttempts, setRemainingAttempts] = useState(0);
+  
+  const totalQuestionsToAnswer = 5;
   
   const startQuestionnaire = () => {
-    // Randomly select 5 questions
+    // Select more questions than needed, in case some are skipped
     const shuffled = [...allIcebreakerQuestions].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 5);
+    // Select more questions initially (e.g., 10) to allow for skipping
+    const selected = shuffled.slice(0, 10); 
     setSelectedQuestions(selected);
     setCurrentQuestionIndex(0);
     setAnswers({});
     setCurrentAnswer('');
+    setSkippedQuestions([]);
+    setQuestionsAnswered(0);
+    setRemainingAttempts(selected.length); // Start with all questions available
     setQuestionStep(1);
     setShowQuestionnaire(true);
   };
   
   const handleSkip = () => {
-    // If we're on the last question, don't allow skip
-    if (currentQuestionIndex < selectedQuestions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setCurrentAnswer('');
+    const currentQuestion = selectedQuestions[currentQuestionIndex];
+    
+    // Add to skipped questions if not already skipped
+    if (!skippedQuestions.includes(currentQuestion)) {
+      setSkippedQuestions(prev => [...prev, currentQuestion]);
+    }
+    
+    // Move to the next question
+    setCurrentQuestionIndex(prev => prev + 1);
+    setCurrentAnswer('');
+    
+    // Decrease remaining attempts counter
+    setRemainingAttempts(prev => prev - 1);
+    
+    // If we don't have enough questions left to reach 5 answers,
+    // and we've gone through all questions once, move to review
+    if (questionsAnswered + remainingAttempts - 1 < totalQuestionsToAnswer) {
+      // Not enough questions remain to reach totalQuestionsToAnswer
+      setQuestionStep(2); // Move to review with what we have
+      toast.warning("Not enough questions left. Moving to review.");
     }
   };
   
@@ -93,12 +117,29 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
       [selectedQuestions[currentQuestionIndex]]: currentAnswer
     }));
     
-    // Move to next question or finish
-    if (currentQuestionIndex < selectedQuestions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setCurrentAnswer('');
-    } else {
+    // Increment counter of answered questions
+    setQuestionsAnswered(prev => prev + 1);
+    
+    // Check if we've answered enough questions
+    if (questionsAnswered + 1 >= totalQuestionsToAnswer) {
       setQuestionStep(2); // Move to submission step
+    } else {
+      // Move to next question, but skip those that were already skipped
+      let nextIndex = currentQuestionIndex + 1;
+      
+      // Decrease remaining attempts
+      setRemainingAttempts(prev => prev - 1);
+      
+      // Check if we have enough questions left
+      if (questionsAnswered + 1 + remainingAttempts - 1 < totalQuestionsToAnswer) {
+        // If we can't reach totalQuestionsToAnswer even with remaining questions
+        setQuestionStep(2); // Move to review with what we have
+        toast.warning("Not enough remaining questions. Moving to review.");
+        return;
+      }
+      
+      setCurrentQuestionIndex(nextIndex);
+      setCurrentAnswer('');
     }
   };
   
@@ -171,7 +212,7 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
           <DialogHeader>
             <DialogTitle>
               {questionStep === 1 
-                ? `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}` 
+                ? `Question ${currentQuestionIndex + 1} | Answered: ${questionsAnswered}/${totalQuestionsToAnswer}` 
                 : 'Review Your Answers'}
             </DialogTitle>
           </DialogHeader>
@@ -190,7 +231,7 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
                 <Button 
                   variant="outline" 
                   onClick={handleSkip}
-                  disabled={currentQuestionIndex === selectedQuestions.length - 1}
+                  disabled={remainingAttempts <= totalQuestionsToAnswer - questionsAnswered}
                   className="gap-1"
                 >
                   <SkipBack size={16} />
@@ -200,33 +241,47 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
                   onClick={handleNext}
                   disabled={!currentAnswer.trim()}
                 >
-                  {currentQuestionIndex === selectedQuestions.length - 1 ? 'Review' : 'Next'}
+                  {questionsAnswered + 1 >= totalQuestionsToAnswer ? 'Review' : 'Next'}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="py-4">
               <div className="max-h-[300px] overflow-y-auto mb-4">
-                {selectedQuestions.map((question, index) => (
+                {Object.entries(answers).map(([question, answer], index) => (
                   <div key={index} className="mb-4 p-3 bg-gray-50 rounded-lg">
                     <h4 className="font-medium mb-1">{question}</h4>
-                    <p className="text-gray-700">{answers[question]}</p>
+                    <p className="text-gray-700">{answer}</p>
                   </div>
                 ))}
               </div>
               
               <DialogFooter>
+                {Object.keys(answers).length < totalQuestionsToAnswer && (
+                  <p className="text-amber-600 mb-2 text-sm">
+                    Note: You've answered {Object.keys(answers).length} out of {totalQuestionsToAnswer} questions.
+                  </p>
+                )}
                 <Button 
                   variant="outline" 
                   onClick={() => {
-                    setQuestionStep(1);
-                    setCurrentQuestionIndex(selectedQuestions.length - 1);
-                    setCurrentAnswer(answers[selectedQuestions[selectedQuestions.length - 1]] || '');
+                    if (Object.keys(answers).length > 0) {
+                      setQuestionStep(1);
+                      // Go to the last answered question
+                      setCurrentQuestionIndex(currentQuestionIndex);
+                      setCurrentAnswer('');
+                    } else {
+                      setShowQuestionnaire(false);
+                    }
                   }}
                 >
                   Back
                 </Button>
-                <Button onClick={handleSubmit} className="gap-1">
+                <Button 
+                  onClick={handleSubmit} 
+                  className="gap-1"
+                  disabled={Object.keys(answers).length === 0}
+                >
                   <CheckCheck size={16} />
                   Submit
                 </Button>
