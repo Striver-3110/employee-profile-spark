@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { MessageSquare, SkipBack, CheckCheck } from "lucide-react";
+import { MessageSquare, SkipBack, CheckCheck, Edit, RefreshCcw } from "lucide-react";
 
 interface Icebreaker {
   question: string;
@@ -66,25 +66,34 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [questionStep, setQuestionStep] = useState(0);
   const [skippedQuestions, setSkippedQuestions] = useState<string[]>([]);
-  const [questionsAnswered, setQuestionsAnswered] = useState(0);
-  const [remainingAttempts, setRemainingAttempts] = useState(0);
+  const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
   
-  const totalQuestionsToAnswer = 5;
+  const minQuestionsToAnswer = 5;
+  const questionsAnswered = Object.keys(answers).length;
   
   const startQuestionnaire = () => {
-    // Select more questions than needed, in case some are skipped
+    // Select random questions
     const shuffled = [...allIcebreakerQuestions].sort(() => 0.5 - Math.random());
-    // Select more questions initially (e.g., 10) to allow for skipping
-    const selected = shuffled.slice(0, 10); 
+    // Select more questions initially (e.g., 15) to allow for flexibility
+    const selected = shuffled.slice(0, 15); 
     setSelectedQuestions(selected);
     setCurrentQuestionIndex(0);
     setAnswers({});
     setCurrentAnswer('');
     setSkippedQuestions([]);
-    setQuestionsAnswered(0);
-    setRemainingAttempts(selected.length); // Start with all questions available
     setQuestionStep(1);
     setShowQuestionnaire(true);
+  };
+  
+  const restartQuestionnaire = () => {
+    // Ask for confirmation if there are already answers
+    if (questionsAnswered > 0) {
+      if (confirm("Are you sure you want to restart? All your answers will be lost.")) {
+        startQuestionnaire();
+      }
+    } else {
+      startQuestionnaire();
+    }
   };
   
   const handleSkip = () => {
@@ -96,18 +105,33 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
     }
     
     // Move to the next question
-    setCurrentQuestionIndex(prev => prev + 1);
-    setCurrentAnswer('');
+    moveToNextQuestion();
+  };
+  
+  const moveToNextQuestion = () => {
+    let nextIndex = currentQuestionIndex + 1;
     
-    // Decrease remaining attempts counter
-    setRemainingAttempts(prev => prev - 1);
-    
-    // If we don't have enough questions left to reach 5 answers,
-    // and we've gone through all questions once, move to review
-    if (questionsAnswered + remainingAttempts - 1 < totalQuestionsToAnswer) {
-      // Not enough questions remain to reach totalQuestionsToAnswer
-      setQuestionStep(2); // Move to review with what we have
-      toast.warning("Not enough questions left. Moving to review.");
+    // If we've reached the end of available questions, move to review
+    if (nextIndex >= selectedQuestions.length) {
+      if (questionsAnswered >= minQuestionsToAnswer) {
+        setQuestionStep(2); // Move to review with what we have
+      } else {
+        // Not enough questions answered, show a message
+        toast.warning(`Please answer at least ${minQuestionsToAnswer} questions. You've answered ${questionsAnswered}.`);
+        
+        // Reset to the first skipped question if available
+        if (skippedQuestions.length > 0) {
+          const firstSkippedIndex = selectedQuestions.findIndex(q => skippedQuestions.includes(q));
+          if (firstSkippedIndex >= 0) {
+            setCurrentQuestionIndex(firstSkippedIndex);
+            setCurrentAnswer('');
+            return;
+          }
+        }
+      }
+    } else {
+      setCurrentQuestionIndex(nextIndex);
+      setCurrentAnswer('');
     }
   };
   
@@ -118,28 +142,22 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
       [selectedQuestions[currentQuestionIndex]]: currentAnswer
     }));
     
-    // Increment counter of answered questions
-    setQuestionsAnswered(prev => prev + 1);
-    
-    // Check if we've answered enough questions
-    if (questionsAnswered + 1 >= totalQuestionsToAnswer) {
-      setQuestionStep(2); // Move to submission step
-    } else {
-      // Move to next question, but skip those that were already skipped
-      let nextIndex = currentQuestionIndex + 1;
-      
-      // Decrease remaining attempts
-      setRemainingAttempts(prev => prev - 1);
-      
-      // Check if we have enough questions left
-      if (questionsAnswered + 1 + remainingAttempts - 1 < totalQuestionsToAnswer) {
-        // If we can't reach totalQuestionsToAnswer even with remaining questions
-        setQuestionStep(2); // Move to review with what we have
-        toast.warning("Not enough remaining questions. Moving to review.");
-        return;
-      }
-      
-      setCurrentQuestionIndex(nextIndex);
+    // Move to next question
+    moveToNextQuestion();
+  };
+  
+  const handleEditAnswer = (question: string) => {
+    setEditingQuestion(question);
+    setCurrentAnswer(answers[question] || '');
+  };
+  
+  const saveEditedAnswer = () => {
+    if (editingQuestion && currentAnswer.trim()) {
+      setAnswers(prev => ({
+        ...prev,
+        [editingQuestion]: currentAnswer
+      }));
+      setEditingQuestion(null);
       setCurrentAnswer('');
     }
   };
@@ -184,18 +202,32 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
       </CardHeader>
       <CardContent className="p-6">
         {icebreakers && icebreakers.length > 0 ? (
-          <Accordion type="single" collapsible className="w-full">
-            {icebreakers.map((icebreaker, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left hover:bg-blue-50 px-4 py-3 rounded-lg">
-                  {icebreaker.question}
-                </AccordionTrigger>
-                <AccordionContent className="px-4 py-3 bg-gray-50 rounded-lg mt-1">
-                  <p className="text-gray-700">{icebreaker.answer}</p>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-sm text-gray-500">You've answered {icebreakers.length} icebreaker questions.</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={startQuestionnaire} 
+                className="gap-1"
+              >
+                <RefreshCcw size={16} />
+                Restart
+              </Button>
+            </div>
+            <Accordion type="single" collapsible className="w-full">
+              {icebreakers.map((icebreaker, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-left hover:bg-blue-50 px-4 py-3 rounded-lg">
+                    {icebreaker.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 py-3 bg-gray-50 rounded-lg mt-1">
+                    <p className="text-gray-700">{icebreaker.answer}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
         ) : (
           <div className="text-center py-6">
             <MessageSquare className="h-12 w-12 mx-auto mb-3 text-blue-400" />
@@ -213,7 +245,7 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
           <DialogHeader>
             <DialogTitle>
               {questionStep === 1 
-                ? `Question ${currentQuestionIndex + 1} | Answered: ${questionsAnswered}/${totalQuestionsToAnswer}` 
+                ? `Question ${currentQuestionIndex + 1} | Answered: ${questionsAnswered}/${minQuestionsToAnswer}+` 
                 : 'Review Your Answers'}
             </DialogTitle>
           </DialogHeader>
@@ -232,7 +264,6 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
                 <Button 
                   variant="outline" 
                   onClick={handleSkip}
-                  disabled={remainingAttempts <= totalQuestionsToAnswer - questionsAnswered}
                   className="gap-1"
                 >
                   <SkipBack size={16} />
@@ -242,7 +273,7 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
                   onClick={handleNext}
                   disabled={!currentAnswer.trim()}
                 >
-                  {questionsAnswered + 1 >= totalQuestionsToAnswer ? 'Review' : 'Next'}
+                  Next
                 </Button>
               </div>
             </div>
@@ -250,45 +281,102 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
             <div className="py-4">
               <div className="max-h-[300px] overflow-y-auto mb-4">
                 {Object.entries(answers).map(([question, answer], index) => (
-                  <div key={index} className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium mb-1">{question}</h4>
+                  <div key={index} className="mb-4 p-3 bg-gray-50 rounded-lg relative group">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleEditAnswer(question)}
+                    >
+                      <Edit size={16} />
+                    </Button>
+                    <h4 className="font-medium mb-1 pr-8">{question}</h4>
                     <p className="text-gray-700">{answer}</p>
                   </div>
                 ))}
               </div>
               
-              <DialogFooter>
-                {Object.keys(answers).length < totalQuestionsToAnswer && (
-                  <p className="text-amber-600 mb-2 text-sm">
-                    Note: You've answered {Object.keys(answers).length} out of {totalQuestionsToAnswer} questions.
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                {questionsAnswered < minQuestionsToAnswer && (
+                  <p className="text-amber-600 mb-2 text-sm w-full">
+                    Note: You've answered {questionsAnswered} out of minimum {minQuestionsToAnswer} required questions.
                   </p>
                 )}
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    if (Object.keys(answers).length > 0) {
-                      setQuestionStep(1);
-                      // Go to the last answered question
-                      setCurrentQuestionIndex(currentQuestionIndex);
-                      setCurrentAnswer('');
-                    } else {
-                      setShowQuestionnaire(false);
-                    }
-                  }}
-                >
-                  Back
-                </Button>
-                <Button 
-                  onClick={handleSubmit} 
-                  className="gap-1"
-                  disabled={Object.keys(answers).length === 0}
-                >
-                  <CheckCheck size={16} />
-                  Submit
-                </Button>
+                <div className="flex justify-between w-full">
+                  <Button 
+                    variant="outline" 
+                    onClick={restartQuestionnaire}
+                    className="gap-1"
+                  >
+                    <RefreshCcw size={16} />
+                    Restart
+                  </Button>
+                  <div className="space-x-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        if (questionsAnswered > 0) {
+                          setQuestionStep(1);
+                          // Go back to answering more questions
+                          setCurrentQuestionIndex(Math.min(currentQuestionIndex, selectedQuestions.length - 1));
+                          setCurrentAnswer('');
+                        } else {
+                          setShowQuestionnaire(false);
+                        }
+                      }}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      onClick={handleSubmit} 
+                      className="gap-1"
+                      disabled={questionsAnswered < minQuestionsToAnswer}
+                    >
+                      <CheckCheck size={16} />
+                      Submit
+                    </Button>
+                  </div>
+                </div>
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Answer Dialog */}
+      <Dialog open={!!editingQuestion} onOpenChange={(open) => !open && setEditingQuestion(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Answer</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {editingQuestion && (
+              <>
+                <h3 className="text-lg font-medium mb-3">{editingQuestion}</h3>
+                <Textarea
+                  value={currentAnswer}
+                  onChange={(e) => setCurrentAnswer(e.target.value)}
+                  placeholder="Edit your answer here..."
+                  className="min-h-[120px] mb-4"
+                />
+                
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setEditingQuestion(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={saveEditedAnswer}
+                    disabled={!currentAnswer.trim()}
+                  >
+                    Save
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </Card>
