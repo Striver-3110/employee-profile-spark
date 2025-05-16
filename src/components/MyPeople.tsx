@@ -62,62 +62,38 @@ const MyPeople: React.FC<MyPeopleProps> = ({
         <CardTitle>My People</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm text-gray-500">Team</h3>
-              <p className="font-medium">{team}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Pod</h3>
-              <p className="font-medium">{pod}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Lead</h3>
-              <p className="font-medium">{lead}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Buddy</h3>
-              <p className="font-medium">{buddy}</p>
-            </div>
-            {showTechAdvisor && techAdvisor && (
-              <div>
-                <h3 className="text-sm text-gray-500">Tech Advisor</h3>
-                <p className="font-medium">{techAdvisor}</p>
-              </div>
-            )}
-            <div className="pt-2">
-              <Button 
-                onClick={() => setShowTeamModal(true)} 
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
-                <User size={16} />
-                <span>View Team</span>
-              </Button>
-            </div>
-          </div>
-
+        <div className="space-y-4">
           <div>
-            <h3 className="text-sm text-gray-500 mb-2">Team Members</h3>
-            <div className="flex flex-wrap gap-3">
-              {teamMembers.slice(0, 6).map((member, index) => (
-                <div key={index} className="flex flex-col items-center">
-                  <Avatar className="mb-1">
-                    <AvatarFallback>{getInitials(member)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-center">{member}</span>
-                </div>
-              ))}
-              {teamMembers.length > 6 && (
-                <div className="flex flex-col items-center">
-                  <Avatar className="mb-1 bg-gray-200">
-                    <AvatarFallback>+{teamMembers.length - 6}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-center">More</span>
-                </div>
-              )}
+            <h3 className="text-sm text-gray-500">Team</h3>
+            <p className="font-medium">{team}</p>
+          </div>
+          <div>
+            <h3 className="text-sm text-gray-500">Pod</h3>
+            <p className="font-medium">{pod}</p>
+          </div>
+          <div>
+            <h3 className="text-sm text-gray-500">Lead</h3>
+            <p className="font-medium">{lead}</p>
+          </div>
+          <div>
+            <h3 className="text-sm text-gray-500">Buddy</h3>
+            <p className="font-medium">{buddy}</p>
+          </div>
+          {showTechAdvisor && techAdvisor && (
+            <div>
+              <h3 className="text-sm text-gray-500">Tech Advisor</h3>
+              <p className="font-medium">{techAdvisor}</p>
             </div>
+          )}
+          <div className="pt-2">
+            <Button 
+              onClick={() => setShowTeamModal(true)} 
+              variant="outline" 
+              className="flex items-center gap-2"
+            >
+              <User size={16} />
+              <span>View Team</span>
+            </Button>
           </div>
         </div>
 
