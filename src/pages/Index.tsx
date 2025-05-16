@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutMe from "@/components/AboutMe";
@@ -83,28 +82,28 @@ const Index = () => {
           recipient: "Sarah Johnson",
           initiatedBy: "me",
           initiatedDate: "2025-03-15T10:30:00",
-          status: "pending",
+          status: "pending" as "pending" | "completed",
           context: "Q1 Performance Review"
         },
         {
           from: "Mike Chen",
           initiatedBy: "other",
           initiatedDate: "2025-03-20T14:45:00",
-          status: "completed",
+          status: "completed" as "pending" | "completed",
           context: "Project Collaboration Feedback"
         },
         {
           recipient: "Lisa Wong",
           initiatedBy: "me",
           initiatedDate: "2025-02-10T09:15:00",
-          status: "completed",
+          status: "completed" as "pending" | "completed",
           context: "Peer Review"
         },
         {
           from: "David Kim",
           initiatedBy: "other",
           initiatedDate: "2025-01-25T11:00:00",
-          status: "pending",
+          status: "pending" as "pending" | "completed",
           context: "Team Leadership Assessment"
         }
       ]
