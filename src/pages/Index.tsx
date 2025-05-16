@@ -75,6 +75,8 @@ const Index = () => {
     email: "john.doe@example.com",
     phone: "+1 (123) 456-7890",
     address: "123 Main St, San Francisco, CA",
+    // Clear icebreakers data to start fresh
+    icebreakers: [],
     feedback: {
       ...employeeData.feedback,
       initiated: [
@@ -139,6 +141,7 @@ const Index = () => {
     }));
   };
   
+  // Make sure the handleUpdateIcebreakers handler is implemented correctly
   const handleUpdateIcebreakers = (icebreakers: { question: string, answer: string }[]) => {
     setEmployee((prev) => ({
       ...prev,

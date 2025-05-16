@@ -141,7 +141,7 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
         <CardTitle>Ice Breakers</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        {icebreakers.length > 0 ? (
+        {icebreakers && icebreakers.length > 0 ? (
           <Accordion type="single" collapsible className="w-full">
             {icebreakers.map((icebreaker, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
