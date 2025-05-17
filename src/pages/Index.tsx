@@ -114,6 +114,13 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [roleGroup, setRoleGroup] = useState('');
   
+  // Define default social links for the ProfileHeader component
+  const defaultSocialLinks = [
+    { platform: "linkedin", url: "https://linkedin.com/in/johndoe" },
+    { platform: "github", url: "https://github.com/johndoe" },
+    { platform: "twitter", url: "https://twitter.com/johndoe" }
+  ];
+  
   useEffect(() => {
     // Set role group based on employee role
     setRoleGroup(getRoleGroup(employee.role));
@@ -167,7 +174,7 @@ const Index = () => {
       <div className="container mx-auto py-4 sm:py-8 px-4">
         {/* Profile header with larger size and improved styling */}
         <div className="mb-8 bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
-          <ProfileHeader />
+          <ProfileHeader socialLinks={defaultSocialLinks} />
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">

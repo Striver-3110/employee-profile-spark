@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +14,7 @@ interface ProfileHeaderProps {
   }[];
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ socialLinks: initialSocialLinks }) => {
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ socialLinks: initialSocialLinks = [] }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [employee, setEmployee] = useState<{
     employee_name: string;
