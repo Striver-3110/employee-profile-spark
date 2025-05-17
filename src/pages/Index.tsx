@@ -169,12 +169,6 @@ const Index = () => {
         {/* Profile header with larger size and improved styling */}
         <div className="mb-8 bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
           <ProfileHeader 
-            name={employee.name}
-            image={employee.image}
-            designation={employee.designation}
-            email={employee.email}
-            phone={employee.phone}
-            address={employee.address}
             socialLinks={employee.socialLinks}
           />
         </div>
