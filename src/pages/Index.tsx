@@ -193,19 +193,18 @@ const Index = () => {
                     role={employee.role}
                     roleGroup={roleGroup}
                     onUpdate={handleUpdateSkills}
+                    employeeId={employee.name}
                   />
                 </div>
               }
               personalInfoComponents={[
                 <CreativePursuits 
-                  pursuits={employee.creativePursuits} 
-                  onUpdate={handleUpdateCreativePursuits}
+                  employeeId={employee.name} 
                   isLoading={isLoading} 
                 />,
                 <Icebreakers 
-                  icebreakers={employee.icebreakers} 
+                  employeeId={employee.name}
                   isLoading={isLoading} 
-                  onUpdate={handleUpdateIcebreakers}
                 />
               ]}
               careerComponents={[

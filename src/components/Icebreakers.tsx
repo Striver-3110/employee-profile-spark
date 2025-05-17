@@ -1,13 +1,14 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { MessageSquare, SkipBack, CheckCheck, Edit, RefreshCcw } from "lucide-react";
+import { MessageSquare, Edit, CheckCheck } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Icebreaker {
   question: string;
@@ -15,49 +16,15 @@ interface Icebreaker {
 }
 
 interface IcebreakersProps {
-  icebreakers: Icebreaker[];
+  icebreakers?: Icebreaker[];
   isLoading?: boolean;
   onUpdate?: (icebreakers: Icebreaker[]) => void;
+  employeeId?: string;
 }
 
-// A list of 30 icebreaker questions
-const allIcebreakerQuestions = [
-  "What's your favorite book and why?",
-  "If you could have dinner with any historical figure, who would it be?",
-  "What's your ideal weekend activity?",
-  "If you could instantly master any skill, what would it be?",
-  "What's the best advice you've ever received?",
-  "What's your favorite travel destination?",
-  "What hobby would you get into if time and money weren't an issue?",
-  "What fictional world would you most like to live in?",
-  "What's something you've always wanted to try but haven't yet?",
-  "What three items would you take to a deserted island?",
-  "What's your go-to productivity hack?",
-  "What was your first job and what did you learn from it?",
-  "What's your favorite way to unwind after work?",
-  "What's the most memorable concert or live event you've attended?",
-  "If you could instantly learn any language, which would you choose?",
-  "What's a cause you're passionate about?",
-  "What's your favorite family tradition?",
-  "What's the most beautiful place you've ever visited?",
-  "What's something people would be surprised to learn about you?",
-  "If you could have any superpower, what would it be?",
-  "What's the most adventurous thing you've ever done?",
-  "What would be your ideal three-course meal?",
-  "If you could live in any era of history, which would you choose?",
-  "What's a skill you'd like to develop this year?",
-  "What was the last book that deeply impacted you?",
-  "If you could swap lives with anyone for a day, who would it be?",
-  "What's the best piece of professional advice you've received?",
-  "What's your favorite childhood memory?",
-  "If you could solve one global problem, what would it be?",
-  "What technology innovation are you most excited about?"
-];
-
 const Icebreakers: React.FC<IcebreakersProps> = ({ 
-  icebreakers, 
-  isLoading = false,
-  onUpdate 
+  isLoading: propIsLoading = false,
+  employeeId = "Alex Johnson" 
 }) => {
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -65,73 +32,88 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [questionStep, setQuestionStep] = useState(0);
-  const [skippedQuestions, setSkippedQuestions] = useState<string[]>([]);
   const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
+  const [iceBreakers, setIceBreakers] = useState<Icebreaker[]>([]);
   
+  const queryClient = useQueryClient();
   const minQuestionsToAnswer = 5;
-  const questionsAnswered = Object.keys(answers).length;
   
+  // Fetch icebreakers
+  const { isLoading: isLoadingIcebreakers, error: icebreakersError } = useQuery({
+    queryKey: ['icebreakers', employeeId],
+    queryFn: async () => {
+      const response = await fetch('/api/method/one_view.api.know_your_team.get_know_your_team_questions', {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch questions');
+      }
+
+      const data = await response.json();
+      console.log('Fetched questions:', data);
+      
+      if (data.message) {
+        setIceBreakers(data.message);
+        return data.message;
+      }
+      return [];
+    },
+    retry: 1,
+  });
+
+  // Save icebreakers mutation
+  const saveIcebreakersMutation = useMutation({
+    mutationFn: async (newIcebreakers: Icebreaker[]) => {
+      const requestBody = {
+        employee: employeeId,
+        questions: newIcebreakers
+      };
+
+      const response = await fetch('/api/method/one_view.api.know_your_team.set_know_your_team_questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save questions');
+      }
+
+      const data = await response.json();
+      console.log('Saved questions:', data);
+      if (data.message) {
+        setIceBreakers(data.message);
+        return data.message;
+      }
+      return newIcebreakers;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['icebreakers', employeeId] });
+      toast.success("Icebreakers saved successfully!");
+      setShowQuestionnaire(false);
+      setQuestionStep(0);
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Failed to save icebreakers'}`);
+    }
+  });
+
   const startQuestionnaire = () => {
-    // Select random questions
-    const shuffled = [...allIcebreakerQuestions].sort(() => 0.5 - Math.random());
-    // Select more questions initially (e.g., 15) to allow for flexibility
-    const selected = shuffled.slice(0, 15); 
-    setSelectedQuestions(selected);
-    setCurrentQuestionIndex(0);
-    setAnswers({});
-    setCurrentAnswer('');
-    setSkippedQuestions([]);
-    setQuestionStep(1);
+    // For now just open the questionnaire with existing questions
     setShowQuestionnaire(true);
-  };
-  
-  const restartQuestionnaire = () => {
-    // Ask for confirmation if there are already answers
-    if (questionsAnswered > 0) {
-      if (confirm("Are you sure you want to restart? All your answers will be lost.")) {
-        startQuestionnaire();
-      }
-    } else {
-      startQuestionnaire();
-    }
-  };
-  
-  const handleSkip = () => {
-    const currentQuestion = selectedQuestions[currentQuestionIndex];
+    setQuestionStep(1);
     
-    // Add to skipped questions if not already skipped
-    if (!skippedQuestions.includes(currentQuestion)) {
-      setSkippedQuestions(prev => [...prev, currentQuestion]);
-    }
-    
-    // Move to the next question
-    moveToNextQuestion();
-  };
-  
-  const moveToNextQuestion = () => {
-    let nextIndex = currentQuestionIndex + 1;
-    
-    // If we've reached the end of available questions, move to review
-    if (nextIndex >= selectedQuestions.length) {
-      if (questionsAnswered >= minQuestionsToAnswer) {
-        setQuestionStep(2); // Move to review with what we have
-      } else {
-        // Not enough questions answered, show a message
-        toast.warning(`Please answer at least ${minQuestionsToAnswer} questions. You've answered ${questionsAnswered}.`);
-        
-        // Reset to the first skipped question if available
-        if (skippedQuestions.length > 0) {
-          const firstSkippedIndex = selectedQuestions.findIndex(q => skippedQuestions.includes(q));
-          if (firstSkippedIndex >= 0) {
-            setCurrentQuestionIndex(firstSkippedIndex);
-            setCurrentAnswer('');
-            return;
-          }
-        }
-      }
-    } else {
-      setCurrentQuestionIndex(nextIndex);
-      setCurrentAnswer('');
+    // If we have existing icebreakers, populate the answers
+    if (iceBreakers.length > 0) {
+      const initialAnswers: Record<string, string> = {};
+      iceBreakers.forEach(item => {
+        initialAnswers[item.question] = item.answer;
+      });
+      setAnswers(initialAnswers);
+      setSelectedQuestions(iceBreakers.map(item => item.question));
+      setCurrentQuestionIndex(0);
+      setCurrentAnswer(iceBreakers[0]?.answer || '');
     }
   };
   
@@ -143,7 +125,16 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
     }));
     
     // Move to next question
-    moveToNextQuestion();
+    let nextIndex = currentQuestionIndex + 1;
+    
+    if (nextIndex >= selectedQuestions.length) {
+      // Move to review
+      setQuestionStep(2);
+    } else {
+      setCurrentQuestionIndex(nextIndex);
+      // Populate with existing answer if exists
+      setCurrentAnswer(answers[selectedQuestions[nextIndex]] || '');
+    }
   };
   
   const handleEditAnswer = (question: string) => {
@@ -169,14 +160,10 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
       answer
     }));
     
-    if (onUpdate) {
-      onUpdate(newIcebreakers);
-    }
-    
-    toast.success("Icebreaker answers submitted!");
-    setShowQuestionnaire(false);
-    setQuestionStep(0);
+    saveIcebreakersMutation.mutate(newIcebreakers);
   };
+
+  const isLoading = propIsLoading || isLoadingIcebreakers || saveIcebreakersMutation.isPending;
 
   if (isLoading) {
     return (
@@ -195,28 +182,41 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
     );
   }
 
+  if (icebreakersError) {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Ice Breakers</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-500">Error loading icebreakers. Please try again later.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="hover:shadow-md transition-shadow duration-300 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
         <CardTitle>Ice Breakers</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        {icebreakers && icebreakers.length > 0 ? (
+        {iceBreakers && iceBreakers.length > 0 ? (
           <div>
             <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-gray-500">You've answered {icebreakers.length} icebreaker questions.</p>
+              <p className="text-sm text-gray-500">You've answered {iceBreakers.length} icebreaker questions.</p>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={startQuestionnaire} 
                 className="gap-1"
               >
-                <RefreshCcw size={16} />
-                Restart
+                <Edit size={16} />
+                Edit Answers
               </Button>
             </div>
             <Accordion type="single" collapsible className="w-full">
-              {icebreakers.map((icebreaker, index) => (
+              {iceBreakers.map((icebreaker, index) => (
                 <AccordionItem key={index} value={`item-${index}`}>
                   <AccordionTrigger className="text-left hover:bg-blue-50 px-4 py-3 rounded-lg">
                     {icebreaker.question}
@@ -245,12 +245,12 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
           <DialogHeader>
             <DialogTitle>
               {questionStep === 1 
-                ? `Question ${currentQuestionIndex + 1} | Answered: ${questionsAnswered}/${minQuestionsToAnswer}+` 
+                ? `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}` 
                 : 'Review Your Answers'}
             </DialogTitle>
           </DialogHeader>
 
-          {questionStep === 1 ? (
+          {questionStep === 1 && selectedQuestions.length > 0 ? (
             <div className="py-4">
               <h3 className="text-lg font-medium mb-3">{selectedQuestions[currentQuestionIndex]}</h3>
               <Textarea
@@ -263,30 +263,41 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
               <div className="flex justify-between">
                 <Button 
                   variant="outline" 
-                  onClick={handleSkip}
-                  className="gap-1"
+                  onClick={() => {
+                    if (currentQuestionIndex > 0) {
+                      // Save current answer before going back
+                      setAnswers(prev => ({
+                        ...prev,
+                        [selectedQuestions[currentQuestionIndex]]: currentAnswer
+                      }));
+                      setCurrentQuestionIndex(currentQuestionIndex - 1);
+                      setCurrentAnswer(answers[selectedQuestions[currentQuestionIndex - 1]] || '');
+                    } else {
+                      setShowQuestionnaire(false);
+                    }
+                  }}
                 >
-                  <SkipBack size={16} />
-                  Skip
+                  Back
                 </Button>
-                {questionsAnswered >= minQuestionsToAnswer ? (
-                  <div className="flex gap-2">
-                    <Button onClick={handleSubmit} variant="default" className="gap-1">
+                <div className="flex gap-2">
+                  {currentQuestionIndex === selectedQuestions.length - 1 ? (
+                    <Button 
+                      onClick={handleNext}
+                      disabled={!currentAnswer.trim()}
+                      className="gap-1"
+                    >
                       <CheckCheck size={16} />
-                      Submit
+                      Review
                     </Button>
-                    <Button onClick={handleNext}>
+                  ) : (
+                    <Button 
+                      onClick={handleNext}
+                      disabled={!currentAnswer.trim()}
+                    >
                       Next
                     </Button>
-                  </div>
-                ) : (
-                  <Button 
-                    onClick={handleNext}
-                    disabled={!currentAnswer.trim()}
-                  >
-                    Next
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           ) : (
@@ -309,45 +320,26 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
               </div>
               
               <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
-                {questionsAnswered < minQuestionsToAnswer && (
-                  <p className="text-amber-600 mb-2 text-sm w-full">
-                    Note: You've answered {questionsAnswered} out of minimum {minQuestionsToAnswer} required questions.
-                  </p>
-                )}
                 <div className="flex justify-between w-full">
                   <Button 
                     variant="outline" 
-                    onClick={restartQuestionnaire}
-                    className="gap-1"
+                    onClick={() => {
+                      // Go back to editing questions
+                      setQuestionStep(1);
+                      setCurrentQuestionIndex(0);
+                      setCurrentAnswer(answers[selectedQuestions[0]] || '');
+                    }}
                   >
-                    <RefreshCcw size={16} />
-                    Restart
+                    Back
                   </Button>
-                  <div className="space-x-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        if (questionsAnswered > 0) {
-                          setQuestionStep(1);
-                          // Go back to answering more questions
-                          setCurrentQuestionIndex(Math.min(currentQuestionIndex, selectedQuestions.length - 1));
-                          setCurrentAnswer('');
-                        } else {
-                          setShowQuestionnaire(false);
-                        }
-                      }}
-                    >
-                      Back
-                    </Button>
-                    <Button 
-                      onClick={handleSubmit} 
-                      className="gap-1"
-                      disabled={questionsAnswered < minQuestionsToAnswer}
-                    >
-                      <CheckCheck size={16} />
-                      Submit
-                    </Button>
-                  </div>
+                  <Button 
+                    onClick={handleSubmit} 
+                    className="gap-1"
+                    disabled={saveIcebreakersMutation.isPending || Object.keys(answers).length === 0}
+                  >
+                    <CheckCheck size={16} />
+                    Save
+                  </Button>
                 </div>
               </DialogFooter>
             </div>

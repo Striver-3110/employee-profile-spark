@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,35 +7,161 @@ import { Plus, Trash2 } from "lucide-react";
 import { DialogComponent } from './ui/dialog-content';
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface CreativePursuitsProps {
-  pursuits: string[];
-  onUpdate: (pursuits: string[]) => void;
+  pursuits?: string[];
+  onUpdate?: (pursuits: string[]) => void;
   isLoading?: boolean;
+  employeeId?: string;
 }
 
-const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate, isLoading = false }) => {
+interface Passion {
+  id?: string;
+  name: string;
+}
+
+const CreativePursuits: React.FC<CreativePursuitsProps> = ({ 
+  pursuits: initialPursuits, 
+  onUpdate, 
+  isLoading: propIsLoading = false,
+  employeeId = "Alex Johnson" 
+}) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newPursuit, setNewPursuit] = useState('');
+  const [passions, setPassions] = useState<Passion[]>([]);
+  const queryClient = useQueryClient();
   
+  // Fetch passions using React Query
+  const { isLoading: isLoadingPassions, error: passionError } = useQuery({
+    queryKey: ['passions', employeeId],
+    queryFn: async () => {
+      const response = await fetch('/api/method/one_view.api.employee.get_employee_passions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: employeeId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch passionate about data');
+      }
+
+      const result = await response.json();
+      if (result.message && Array.isArray(result.message)) {
+        setPassions(result.message);
+        return result.message;
+      }
+      return [];
+    },
+    retry: 1,
+  });
+
+  // Add passion mutation
+  const addPassionMutation = useMutation({
+    mutationFn: async (passion: string) => {
+      // Create a temporary item with a unique ID to show optimistic UI
+      const tempId = `temp-${Date.now()}`;
+      const tempPassion = { id: tempId, name: passion };
+      
+      // Optimistic update
+      setPassions(prev => [...prev, tempPassion]);
+      
+      // Make the API call
+      const response = await fetch('/api/method/one_view.api.employee.update_employee_passion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employee_id: employeeId,
+          passion,
+          action: 'add'
+        }),
+      });
+
+      if (!response.ok) {
+        // Remove the temporary item if request fails
+        setPassions(passions.filter(p => p.id !== tempId));
+        throw new Error('Failed to add passion');
+      }
+
+      const result = await response.json();
+      
+      if (result.message && result.message.success) {
+        // Update the temporary item to a permanent one
+        setPassions(prevPassions => 
+          prevPassions.map(p => 
+            p.id === tempId ? { name } : p
+          )
+        );
+        return result;
+      }
+      
+      throw new Error('Unexpected response format');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['passions', employeeId] });
+      toast.success("Creative pursuit added successfully!");
+      setNewPursuit('');
+      setIsDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Failed to add pursuit'}`);
+    }
+  });
+
+  // Remove passion mutation
+  const removePassionMutation = useMutation({
+    mutationFn: async (passion: string) => {
+      // Optimistic update
+      const previousPassions = [...passions];
+      setPassions(passions.filter(p => p.name !== passion));
+      
+      try {
+        const response = await fetch('/api/method/one_view.api.employee.update_employee_passion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employee_id: employeeId,
+            passion,
+            action: 'delete'
+          }),
+        });
+
+        if (!response.ok) {
+          // Revert to previous state
+          setPassions(previousPassions);
+          throw new Error('Failed to remove passion');
+        }
+
+        return await response.json();
+      } catch (error) {
+        // Revert to previous state
+        setPassions(previousPassions);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['passions', employeeId] });
+      toast.success("Creative pursuit removed successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Failed to remove pursuit'}`);
+    }
+  });
+
   const handleAddPursuit = () => {
     if (!newPursuit.trim()) {
       toast.error("Please enter a valid pursuit");
       return;
     }
     
-    const updatedPursuits = [...pursuits, newPursuit.trim()];
-    onUpdate(updatedPursuits);
-    setNewPursuit('');
-    setIsDialogOpen(false);
-    toast.success("Creative pursuit added successfully!");
+    addPassionMutation.mutate(newPursuit.trim());
   };
   
-  const handleRemovePursuit = (index: number) => {
-    const updatedPursuits = pursuits.filter((_, i) => i !== index);
-    onUpdate(updatedPursuits);
-    toast.success("Creative pursuit removed successfully!");
+  const handleRemovePursuit = (passion: string) => {
+    removePassionMutation.mutate(passion);
   };
+
+  const isLoading = propIsLoading || isLoadingPassions || addPassionMutation.isPending || removePassionMutation.isPending;
 
   if (isLoading) {
     return (
@@ -56,6 +182,19 @@ const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate,
     );
   }
 
+  if (passionError) {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Creative Pursuits</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-500">Error loading pursuits. Please try again later.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="hover:shadow-md transition-shadow duration-300 overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50">
@@ -65,14 +204,15 @@ const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate,
         </Button>
       </CardHeader>
       <CardContent className="p-6">
-        {pursuits.length > 0 ? (
+        {passions.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {pursuits.map((pursuit, index) => (
-              <div key={index} className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full px-4 py-2 shadow-sm">
-                <span className="font-medium">{pursuit}</span>
+            {passions.map((passion, index) => (
+              <div key={passion.id || index} className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full px-4 py-2 shadow-sm">
+                <span className="font-medium">{passion.name}</span>
                 <button 
-                  onClick={() => handleRemovePursuit(index)}
+                  onClick={() => handleRemovePursuit(passion.name)}
                   className="text-gray-500 hover:text-red-500 transition-colors"
+                  disabled={removePassionMutation.isPending}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -100,7 +240,12 @@ const CreativePursuits: React.FC<CreativePursuitsProps> = ({ pursuits, onUpdate,
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddPursuit}>Add</Button>
+            <Button 
+              onClick={handleAddPursuit}
+              disabled={addPassionMutation.isPending || !newPursuit.trim()}
+            >
+              Add
+            </Button>
           </div>
         </div>
       </DialogComponent>
