@@ -1,10 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 interface TeamMember {
   name: string;
@@ -30,8 +28,6 @@ const MyPeople: React.FC<MyPeopleProps> = ({
   teamMembers,
   role
 }) => {
-  const [showTeamModal, setShowTeamModal] = useState(false);
-  
   // Function to get initials for avatar
   const getInitials = (name: string) => {
     return name
@@ -44,7 +40,7 @@ const MyPeople: React.FC<MyPeopleProps> = ({
   const showTechAdvisor = role === 'tech';
   const showTeamDetails = role !== 'co-founder';
 
-  // Mock team members with roles (in a real app, these would come from the API)
+  // Map team members with roles
   const teamMembersWithRoles: TeamMember[] = teamMembers.map(name => ({
     name,
     role: name === lead ? "Team Lead" : 
@@ -57,69 +53,69 @@ const MyPeople: React.FC<MyPeopleProps> = ({
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>My People</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-sm text-gray-500">Team</h3>
-            <p className="font-medium">{team}</p>
-          </div>
-          <div>
-            <h3 className="text-sm text-gray-500">Pod</h3>
-            <p className="font-medium">{pod}</p>
-          </div>
-          <div>
-            <h3 className="text-sm text-gray-500">Lead</h3>
-            <p className="font-medium">{lead}</p>
-          </div>
-          <div>
-            <h3 className="text-sm text-gray-500">Buddy</h3>
-            <p className="font-medium">{buddy}</p>
-          </div>
-          {showTechAdvisor && techAdvisor && (
-            <div className="col-span-1 sm:col-span-2">
-              <h3 className="text-sm text-gray-500">Tech Advisor</h3>
-              <p className="font-medium">{techAdvisor}</p>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm text-gray-500">Team</h3>
+              <p className="font-medium">{team}</p>
             </div>
-          )}
-          <div className="col-span-1 sm:col-span-2 pt-2">
-            <Button 
-              onClick={() => setShowTeamModal(true)} 
-              variant="outline" 
-              className="flex items-center gap-2 w-full sm:w-auto"
-            >
-              <User size={16} />
-              <span>View Team</span>
-            </Button>
+            <div>
+              <h3 className="text-sm text-gray-500">Pod</h3>
+              <p className="font-medium">{pod}</p>
+            </div>
+            <div>
+              <h3 className="text-sm text-gray-500">Lead</h3>
+              <p className="font-medium">{lead}</p>
+            </div>
+            <div>
+              <h3 className="text-sm text-gray-500">Buddy</h3>
+              <p className="font-medium">{buddy}</p>
+            </div>
+            {showTechAdvisor && techAdvisor && (
+              <div className="col-span-1 sm:col-span-2">
+                <h3 className="text-sm text-gray-500">Tech Advisor</h3>
+                <p className="font-medium">{techAdvisor}</p>
+              </div>
+            )}
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Team Members Modal */}
-        <Dialog open={showTeamModal} onOpenChange={setShowTeamModal}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Team Members</DialogTitle>
-            </DialogHeader>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto py-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Members</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12"></TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Role</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {teamMembersWithRoles.map((member, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Avatar>
-                    <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">{member.role}</p>
-                  </div>
-                </div>
+                <TableRow key={index}>
+                  <TableCell>
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                    </Avatar>
+                  </TableCell>
+                  <TableCell className="font-medium">{member.name}</TableCell>
+                  <TableCell>{member.role}</TableCell>
+                </TableRow>
               ))}
-            </div>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -2,7 +2,7 @@
 import React, { useState, Suspense } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Briefcase, LayoutList, CirclePlus } from "lucide-react";
+import { User, Briefcase, LayoutList, Users, CirclePlus } from "lucide-react";
 import ChartBarIcon from './ChartBarIcon';
 
 interface TabsContainerProps {
@@ -10,6 +10,7 @@ interface TabsContainerProps {
   personalInfoComponents: React.ReactNode[];
   careerComponents: React.ReactNode[];
   metricsComponents: React.ReactNode[];
+  peopleComponent: React.ReactNode;
 }
 
 const TabsContainer: React.FC<TabsContainerProps> = ({
@@ -17,6 +18,7 @@ const TabsContainer: React.FC<TabsContainerProps> = ({
   personalInfoComponents,
   careerComponents,
   metricsComponents,
+  peopleComponent,
 }) => {
   const [activeTab, setActiveTab] = useState("about");
 
@@ -30,7 +32,7 @@ const TabsContainer: React.FC<TabsContainerProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-4 mb-6 w-full bg-white rounded-lg shadow-sm">
+      <TabsList className="grid grid-cols-5 mb-6 w-full bg-white rounded-lg shadow-sm">
         <TabsTrigger value="about" className="flex items-center gap-2 py-3">
           <User size={16} />
           <span>About</span>
@@ -46,6 +48,10 @@ const TabsContainer: React.FC<TabsContainerProps> = ({
         <TabsTrigger value="metrics" className="flex items-center gap-2 py-3">
           <ChartBarIcon size={16} />
           <span>Metrics</span>
+        </TabsTrigger>
+        <TabsTrigger value="people" className="flex items-center gap-2 py-3">
+          <Users size={16} />
+          <span>My People</span>
         </TabsTrigger>
       </TabsList>
 
@@ -76,6 +82,12 @@ const TabsContainer: React.FC<TabsContainerProps> = ({
           {metricsComponents.map((component, index) => (
             <React.Fragment key={`metrics-${index}`}>{component}</React.Fragment>
           ))}
+        </Suspense>
+      </TabsContent>
+
+      <TabsContent value="people" className="space-y-6">
+        <Suspense fallback={<TabSkeleton />}>
+          {peopleComponent}
         </Suspense>
       </TabsContent>
     </Tabs>

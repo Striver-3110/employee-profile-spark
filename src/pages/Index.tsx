@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutMe from "@/components/AboutMe";
@@ -142,7 +141,6 @@ const Index = () => {
     }));
   };
   
-  // Make sure the handleUpdateIcebreakers handler is implemented correctly
   const handleUpdateIcebreakers = (icebreakers: { question: string, answer: string }[]) => {
     setEmployee((prev) => ({
       ...prev,
@@ -169,25 +167,27 @@ const Index = () => {
       <div className="container mx-auto py-4 sm:py-8 px-4">
         {/* Profile header with larger size and improved styling */}
         <div className="mb-8 bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
-          <ProfileHeader 
-            socialLinks={[
-              { platform: 'linkedin', url: 'https://linkedin.com/in/johndoe' },
-              { platform: 'github', url: 'https://github.com/johndoe' },
-              { platform: 'twitter', url: 'https://twitter.com/johndoe' }
-            ]}
-          />
+          <ProfileHeader />
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main content with tabs */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <TabsContainer 
               aboutComponent={
-                <AboutMe 
-                  about={employee.about} 
-                  isLoading={isLoading} 
-                  onUpdate={handleUpdateAbout} 
-                />
+                <div className="space-y-6">
+                  <AboutMe 
+                    about={employee.about} 
+                    isLoading={isLoading} 
+                    onUpdate={handleUpdateAbout} 
+                  />
+                  <SkillsDisplay 
+                    skills={employee.skills} 
+                    role={employee.role}
+                    roleGroup={roleGroup}
+                    onUpdate={handleUpdateSkills}
+                  />
+                </div>
               }
               personalInfoComponents={[
                 <CreativePursuits 
@@ -213,30 +213,18 @@ const Index = () => {
                   lastUpdated={lastCalibrationUpdate}
                 />
               ]}
+              peopleComponent={
+                <MyPeople 
+                  team={employee.people.team}
+                  pod={employee.people.pod}
+                  lead={employee.people.lead}
+                  buddy={employee.people.buddy}
+                  techAdvisor={employee.people.techAdvisor}
+                  teamMembers={employee.people.teamMembers}
+                  role={employee.role}
+                />
+              }
             />
-          </div>
-          
-          {/* Right column - improved styling */}
-          <div className="space-y-4 sm:space-y-6">
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
-              <MyPeople 
-                team={employee.people.team}
-                pod={employee.people.pod}
-                lead={employee.people.lead}
-                buddy={employee.people.buddy}
-                techAdvisor={employee.people.techAdvisor}
-                teamMembers={employee.people.teamMembers}
-                role={employee.role}
-              />
-            </div>
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
-              <SkillsDisplay 
-                skills={employee.skills} 
-                role={employee.role}
-                roleGroup={roleGroup}
-                onUpdate={handleUpdateSkills}
-              />
-            </div>
           </div>
         </div>
       </div>
