@@ -269,12 +269,24 @@ const Icebreakers: React.FC<IcebreakersProps> = ({
                   <SkipBack size={16} />
                   Skip
                 </Button>
-                <Button 
-                  onClick={handleNext}
-                  disabled={!currentAnswer.trim()}
-                >
-                  Next
-                </Button>
+                {questionsAnswered >= minQuestionsToAnswer ? (
+                  <div className="flex gap-2">
+                    <Button onClick={handleSubmit} variant="default" className="gap-1">
+                      <CheckCheck size={16} />
+                      Submit
+                    </Button>
+                    <Button onClick={handleNext}>
+                      Next
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={handleNext}
+                    disabled={!currentAnswer.trim()}
+                  >
+                    Next
+                  </Button>
+                )}
               </div>
             </div>
           ) : (
