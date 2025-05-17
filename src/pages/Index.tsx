@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutMe from "@/components/AboutMe";
@@ -169,7 +170,11 @@ const Index = () => {
         {/* Profile header with larger size and improved styling */}
         <div className="mb-8 bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
           <ProfileHeader 
-            socialLinks={employee.socialLinks}
+            socialLinks={[
+              { platform: 'linkedin', url: 'https://linkedin.com/in/johndoe' },
+              { platform: 'github', url: 'https://github.com/johndoe' },
+              { platform: 'twitter', url: 'https://twitter.com/johndoe' }
+            ]}
           />
         </div>
         
