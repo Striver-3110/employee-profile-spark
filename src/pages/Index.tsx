@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutMe from "@/components/AboutMe";
@@ -211,7 +210,7 @@ const Index = () => {
               ]}
               careerComponents={[
                 <EmploymentDetails joinedDate={employee.joinedDate} isLoading={isLoading} />,
-                <CareerProgression progression={employee.progression} />
+                <CareerProgression employeeId={employee.name} />
               ]}
               metricsComponents={[
                 <FeedbackSection feedback={employee.feedback} />,
