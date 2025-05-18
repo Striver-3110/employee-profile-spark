@@ -193,8 +193,6 @@ const Index = () => {
                     role={employee.role}
                     roleGroup={roleGroup}
                     onUpdate={handleUpdateSkills}
-                    // We're removing this prop since it's not in the component's type definition
-                    // employeeId={employee.name}
                   />
                 </div>
               }
@@ -209,7 +207,7 @@ const Index = () => {
                 />
               ]}
               careerComponents={[
-                <EmploymentDetails joinedDate={employee.joinedDate} isLoading={isLoading} />,
+                <EmploymentDetails isLoading={isLoading} />,
                 <CareerProgression employeeId={employee.name} />
               ]}
               metricsComponents={[
