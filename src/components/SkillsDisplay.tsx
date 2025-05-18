@@ -8,6 +8,7 @@ import { Plus, X, Move } from "lucide-react";
 import { DialogComponent } from './ui/dialog-content';
 import { skillSuggestions } from '@/data/mockData';
 import { toast } from "sonner";
+import { useQuery } from '@tanstack/react-query';
 import { employeeData } from "@/data/mockData";
 
 interface SkillsDisplayProps {
@@ -20,15 +21,17 @@ interface SkillsDisplayProps {
   role: string;
   roleGroup: string;
   onUpdate: (category: string, skills: string[]) => void;
+  employeeId?: string;
 }
 
-const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, onUpdate }) => {
+const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills: initialSkills, role, roleGroup, onUpdate, employeeId }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [newSkill, setNewSkill] = useState('');
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [draggedSkill, setDraggedSkill] = useState<{ skill: string; category: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [skills, setSkills] = useState(initialSkills);
   
   // Create refs for each category for drop zones
   const expertRef = useRef<HTMLDivElement>(null);
@@ -36,8 +39,8 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
   const beginnerRef = useRef<HTMLDivElement>(null);
   const learningRef = useRef<HTMLDivElement>(null);
 
-  // Get employeeId from mock data
-  const employeeId = employeeData.name;
+  // Get employeeId from mock data if not provided as prop
+  const employeeIdentifier = employeeId || employeeData.name;
 
   // Determine component title based on role group
   const componentTitle = roleGroup === 'Technical Roles' ? 'Tech Stack' : 'Competency Map';
@@ -45,6 +48,49 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
   // Get appropriate suggestions based on role
   const isTechRole = roleGroup === 'Technical Roles';
   const suggestions = isTechRole ? skillSuggestions.tech : skillSuggestions.nonTech;
+
+  // Fetch tech stack data using the API
+  const { data: techStackData, isLoading: isLoadingTechStack, error: techStackError } = useQuery({
+    queryKey: ['techStack', employeeIdentifier],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/method/one_view.api.tech_stack.get_employee_tech_stack?employee_id=${encodeURIComponent(employeeIdentifier)}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch tech stack data');
+        }
+        
+        const data = await response.json();
+        return data.message;
+      } catch (error) {
+        console.error('Error fetching tech stack data:', error);
+        toast.error('Failed to load skills data');
+        throw error;
+      }
+    },
+    enabled: !!employeeIdentifier
+  });
+
+  // Update skills state when tech stack data is fetched
+  useEffect(() => {
+    if (techStackData) {
+      const formattedSkills = {
+        expert: techStackData.filter((skill: any) => skill.category === 'expert').map((skill: any) => skill.skill),
+        intermediate: techStackData.filter((skill: any) => skill.category === 'intermediate').map((skill: any) => skill.skill),
+        beginner: techStackData.filter((skill: any) => skill.category === 'beginner').map((skill: any) => skill.skill),
+        learning: techStackData.filter((skill: any) => skill.category === 'learning').map((skill: any) => skill.skill),
+      };
+      
+      setSkills(formattedSkills);
+      // Update parent component as well
+      Object.keys(formattedSkills).forEach((category) => {
+        onUpdate(category, formattedSkills[category as keyof typeof formattedSkills]);
+      });
+    }
+  }, [techStackData, onUpdate]);
 
   // Get all skills across all categories
   const allSkills = [...skills.expert, ...skills.intermediate, ...skills.beginner, ...skills.learning];
@@ -102,7 +148,7 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            employee_id: employeeId,
+            employee_id: employeeIdentifier,
             skill: techToAdd,
             category: selectedCategory
           }),
@@ -113,6 +159,14 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
         }
         
         const updatedSkills = [...skills[selectedCategory as keyof typeof skills], techToAdd];
+        
+        // Update local state
+        setSkills(prev => ({
+          ...prev,
+          [selectedCategory]: updatedSkills
+        }));
+        
+        // Update parent component
         onUpdate(selectedCategory, updatedSkills);
         setIsDialogOpen(false);
         toast.success(`Skill added to ${selectedCategory} successfully!`);
@@ -149,7 +203,7 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          employee_id: employeeId,
+          employee_id: employeeIdentifier,
           skill: skill,
           category: sourceCategory
         }),
@@ -166,7 +220,7 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          employee_id: employeeId,
+          employee_id: employeeIdentifier,
           skill: skill,
           category: targetCategory
         }),
@@ -176,14 +230,24 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
         throw new Error("Failed to add skill to target category");
       }
       
-      // Update UI
-      const sourceSkills = [...skills[sourceCategory as keyof typeof skills]];
-      const updatedSourceSkills = sourceSkills.filter(s => s !== skill);
-      onUpdate(sourceCategory, updatedSourceSkills);
+      // Update local state
+      setSkills(prev => {
+        const sourceSkills = [...prev[sourceCategory as keyof typeof skills]];
+        const updatedSourceSkills = sourceSkills.filter(s => s !== skill);
+        
+        const targetSkills = [...prev[targetCategory as keyof typeof skills]];
+        const updatedTargetSkills = [...targetSkills, skill];
+        
+        return {
+          ...prev,
+          [sourceCategory]: updatedSourceSkills,
+          [targetCategory]: updatedTargetSkills
+        };
+      });
       
-      const targetSkills = [...skills[targetCategory as keyof typeof skills]];
-      const updatedTargetSkills = [...targetSkills, skill];
-      onUpdate(targetCategory, updatedTargetSkills);
+      // Update parent component
+      onUpdate(sourceCategory, skills[sourceCategory as keyof typeof skills].filter(s => s !== skill));
+      onUpdate(targetCategory, [...skills[targetCategory as keyof typeof skills], skill]);
       
       toast.success(`Moved "${skill}" from ${sourceCategory} to ${targetCategory}`);
     } catch (error) {
@@ -215,7 +279,7 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          employee_id: employeeId,
+          employee_id: employeeIdentifier,
           skill: skillToDelete,
           category: category
         }),
@@ -225,9 +289,17 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
         throw new Error("Failed to remove skill");
       }
       
-      const categorySkills = skills[category as keyof typeof skills];
-      const updatedSkills = categorySkills.filter(skill => skill !== skillToDelete);
-      onUpdate(category, updatedSkills);
+      // Update local state
+      setSkills(prev => {
+        const updatedCategorySkills = prev[category as keyof typeof skills].filter(skill => skill !== skillToDelete);
+        return {
+          ...prev,
+          [category]: updatedCategorySkills
+        };
+      });
+      
+      // Update parent component
+      onUpdate(category, skills[category as keyof typeof skills].filter(skill => skill !== skillToDelete));
       toast.success(`Removed "${skillToDelete}" from ${category}`);
     } catch (error) {
       console.error("Error removing skill:", error);
@@ -246,18 +318,20 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
           variant="ghost" 
           size="sm" 
           onClick={() => handleOpenDialog(category)}
-          disabled={isLoading}
+          disabled={isLoading || isLoadingTechStack}
         >
           <Plus size={16} />
         </Button>
       </div>
       <div 
         ref={ref}
-        className={`flex flex-wrap gap-2 min-h-[60px] p-2 border border-dashed ${isLoading ? 'bg-gray-50' : 'bg-transparent'} border-gray-300 rounded-md`}
+        className={`flex flex-wrap gap-2 min-h-[60px] p-2 border border-dashed ${isLoading || isLoadingTechStack ? 'bg-gray-50' : 'bg-transparent'} border-gray-300 rounded-md`}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(category, e)}
       >
-        {skillList.length > 0 ? (
+        {isLoadingTechStack ? (
+          <p className="text-gray-400 text-sm">Loading skills...</p>
+        ) : skillList.length > 0 ? (
           skillList.map((skill, index) => (
             <Badge 
               key={index} 
@@ -283,6 +357,22 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ skills, role, roleGroup, 
       </div>
     </div>
   );
+
+  // Show error state if API call fails
+  if (techStackError && !isLoadingTechStack) {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>{componentTitle}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 bg-red-50 text-red-700 rounded-md">
+            Failed to load skills data. Please try again later.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="mb-6">

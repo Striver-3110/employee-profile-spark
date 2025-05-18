@@ -193,6 +193,7 @@ const Index = () => {
                     role={employee.role}
                     roleGroup={roleGroup}
                     onUpdate={handleUpdateSkills}
+                    employeeId={employee.name}
                   />
                 </div>
               }
@@ -207,7 +208,7 @@ const Index = () => {
                 />
               ]}
               careerComponents={[
-                <EmploymentDetails isLoading={isLoading} />,
+                <EmploymentDetails isLoading={isLoading} employeeId={employee.name} />,
                 <CareerProgression employeeId={employee.name} />
               ]}
               metricsComponents={[
