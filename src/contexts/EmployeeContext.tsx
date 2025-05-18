@@ -29,8 +29,8 @@ export interface Employee {
   icebreakers: { question: string; answer: string }[];
   calibration: {
     performancePotentialGrid: {
-      performance: number;
-      potential: number;
+      performance: string; // Changed to string to match the mock data structure
+      potential: string;   // Changed to string to match the mock data structure
     };
     skillLevels: {
       skill: string;
@@ -38,6 +38,21 @@ export interface Employee {
     }[];
   };
   feedback: {
+    givenByMe: {
+      recipient?: string;
+      date?: string;
+      summary?: string;
+    }[];
+    givenToMe: {
+      from?: string;
+      date?: string;
+      summary?: string;
+    }[];
+    pendingToGive: {
+      recipient?: string;
+      dueDate?: string;
+      context?: string;
+    }[];
     initiated: {
       recipient?: string;
       from?: string;
@@ -82,8 +97,22 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({ children }) 
     address: "123 Main St, San Francisco, CA",
     // Clear icebreakers data to start fresh
     icebreakers: [],
+    // Ensure feedback structure matches the Employee interface
     feedback: {
-      ...employeeData.feedback,
+      givenByMe: [
+        {
+          recipient: "Priya Patel",
+          date: "2023-09-15",
+          summary: "Outstanding work on the authentication system"
+        }
+      ],
+      givenToMe: [
+        { from: "Sarah Thompson", date: "2023-10-05", summary: "Excellent leadership on the dashboard project" },
+        { from: "Dr. Rachel Kim", date: "2023-07-20", summary: "Great problem-solving skills demonstrated in the recent sprint" }
+      ],
+      pendingToGive: [
+        { recipient: "James Wilson", dueDate: "2023-11-30", context: "Q3 Performance Review" }
+      ],
       initiated: [
         {
           recipient: "Sarah Johnson",

@@ -5,8 +5,8 @@ import { format } from 'date-fns';
 
 interface CalibrationProps {
   performancePotentialGrid: {
-    performance: string; // low, medium, high
-    potential: string; // low, medium, high
+    performance: string; // Changed to string to match the context/employee data
+    potential: string;   // Changed to string to match the context/employee data
   };
   skillLevels: {
     skill: string;

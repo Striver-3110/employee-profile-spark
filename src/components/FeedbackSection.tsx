@@ -15,7 +15,7 @@ interface FeedbackItem {
   summary?: string;
   context?: string;
   status?: 'pending' | 'completed';
-  initiatedBy?: string;
+  initiatedBy?: "me" | "other";
   initiatedDate?: string;
 }
 
