@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutMe from "@/components/AboutMe";
@@ -193,7 +194,8 @@ const Index = () => {
                     role={employee.role}
                     roleGroup={roleGroup}
                     onUpdate={handleUpdateSkills}
-                    employeeId={employee.name}
+                    // We're removing this prop since it's not in the component's type definition
+                    // employeeId={employee.name}
                   />
                 </div>
               }

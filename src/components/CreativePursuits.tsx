@@ -86,10 +86,10 @@ const CreativePursuits: React.FC<CreativePursuitsProps> = ({
       const result = await response.json();
       
       if (result.message && result.message.success) {
-        // Update the temporary item to a permanent one
+        // Fix: Ensure we're returning a valid name string for the updated passion
         setPassions(prevPassions => 
           prevPassions.map(p => 
-            p.id === tempId ? { name } : p
+            p.id === tempId ? { id: p.id, name: passion } : p
           )
         );
         return result;
