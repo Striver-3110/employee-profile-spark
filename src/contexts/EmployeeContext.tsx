@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { employeeData } from "@/data/mockData";
 import { getRoleGroup } from "@/utils/RoleUtils";
@@ -13,6 +12,7 @@ export interface Employee {
   email: string;
   phone: string;
   address: string;
+  image?: string;
   skills: {
     expert: string[];
     intermediate: string[];
@@ -103,6 +103,7 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({ children }) 
     email: "john.doe@example.com",
     phone: "+1 (123) 456-7890",
     address: "123 Main St, San Francisco, CA",
+    image: "", // Add default empty image property
     // Clear icebreakers data to start fresh
     icebreakers: [],
     // Ensure feedback structure matches the Employee interface
@@ -214,6 +215,7 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({ children }) 
       phone: apiData.cell_number || prev.phone,
       address: apiData.current_address || prev.address,
       joiningDate: apiData.date_of_joining,
+      image: apiData.image || prev.image, // Add the image from API data
       skills: skillsData,
       people: {
         ...prev.people,
@@ -286,3 +288,5 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({ children }) 
     </EmployeeContext.Provider>
   );
 };
+
+export default EmployeeProvider;
