@@ -11,19 +11,12 @@ import CareerProgression from "@/components/CareerProgression";
 import FeedbackSection from "@/components/FeedbackSection";
 import CalibrationData from "@/components/CalibrationData";
 import TabsContainer from "@/components/TabsContainer";
-import { Toaster } from "@/components/ui/sonner";
 import { useEmployee } from "@/contexts/EmployeeContext";
-
-// Define default social links for the ProfileHeader component
-const defaultSocialLinks = [
-  { platform: "linkedin", url: "https://linkedin.com/in/johndoe" },
-  { platform: "github", url: "https://github.com/johndoe" },
-  { platform: "twitter", url: "https://twitter.com/johndoe" }
-];
 
 const MainLayout: React.FC = () => {
   const { 
     employee, 
+    employeeId,
     roleGroup, 
     isLoading, 
     handleUpdateAbout,
@@ -35,11 +28,10 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Toaster position="top-right" />
       <div className="container mx-auto py-4 sm:py-8 px-4">
         {/* Profile header with larger size and improved styling */}
         <div className="mb-8 bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300">
-          <ProfileHeader socialLinks={defaultSocialLinks} />
+          <ProfileHeader />
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -58,23 +50,23 @@ const MainLayout: React.FC = () => {
                     role={employee.role}
                     roleGroup={roleGroup}
                     onUpdate={handleUpdateSkills}
-                    employeeId={employee.name}
+                    employeeId={employeeId}
                   />
                 </div>
               }
               personalInfoComponents={[
                 <CreativePursuits 
-                  employeeId={employee.name} 
+                  employeeId={employeeId} 
                   isLoading={isLoading} 
                 />,
                 <Icebreakers 
-                  employeeId={employee.name}
+                  employeeId={employeeId}
                   isLoading={isLoading} 
                 />
               ]}
               careerComponents={[
-                <EmploymentDetails isLoading={isLoading} employeeId={employee.name} />,
-                <CareerProgression employeeId={employee.name} />
+                <EmploymentDetails isLoading={isLoading} />,
+                <CareerProgression />
               ]}
               metricsComponents={[
                 <FeedbackSection feedback={employee.feedback} />,

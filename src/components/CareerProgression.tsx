@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from '@/data/mockData';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEmployee } from "@/contexts/EmployeeContext";
+import { fetchProjects } from '@/services/api';
 
 interface Project {
   id: string;
@@ -17,49 +18,13 @@ interface Project {
   description: string;
 }
 
-interface CareerProgressionProps {
-  employeeId: string; // Add employeeId prop
-}
-
-const CareerProgression: React.FC<CareerProgressionProps> = ({ employeeId }) => {
+const CareerProgression: React.FC = () => {
+  const { employeeId } = useEmployee();
+  
   // Fetch projects using React Query
   const { data: projects, isLoading, error } = useQuery({
     queryKey: ['employeeProjects', employeeId],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/method/one_view.api.project.get_employee_projects?employee_id=${encodeURIComponent(employeeId)}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch projects');
-        }
-
-        const data = (await response.json()).message;
-        
-        // Map returned projects to our interface format
-        const projectsData = data.map((project: any) => ({
-          id: project.name,
-          name: project.name,
-          title: project.title,
-          expected_start_date: project.expected_start_date,
-          expected_end_date: project.expected_end_date,
-          status: project.status,
-          project_link: project.project_link,
-          description: project.description
-        }));
-        
-        // Sort projects by start date in descending order (most recent first)
-        return [...projectsData].sort((a, b) => {
-          return new Date(b.expected_start_date).getTime() - new Date(a.expected_start_date).getTime();
-        });
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-        toast.error('Failed to load career progression data');
-        throw error;
-      }
-    },
+    queryFn: () => fetchProjects(employeeId),
     enabled: !!employeeId,
   });
 

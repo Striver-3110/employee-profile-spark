@@ -1,46 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, calculateTenure } from '@/data/mockData';
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from '@tanstack/react-query';
-import { toast } from "sonner";
+import { useEmployee } from "@/contexts/EmployeeContext";
 
 interface EmploymentDetailsProps {
   isLoading?: boolean;
-  employeeId?: string; // Make employeeId optional
+  employeeId?: string;
 }
 
-const EmploymentDetails: React.FC<EmploymentDetailsProps> = ({ isLoading: controlledLoading, employeeId }) => {
-  // Use React Query to fetch employee details
-  const { data: employeeDetails, isLoading: queryLoading, error } = useQuery({
-    queryKey: ['employeeDetails'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/method/one_view.api.user.get_employee_details', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch employee details');
-        }
-
-        const data = await response.json();
-        return data.message;
-      } catch (error) {
-        console.error('Error fetching employee details:', error);
-        toast.error('Failed to load employment details');
-        throw error;
-      }
-    }
-  });
-
+const EmploymentDetails: React.FC<EmploymentDetailsProps> = ({ isLoading: controlledLoading }) => {
+  const { employee, isLoading: contextLoading } = useEmployee();
+  
   // Determine if we're in a loading state
-  const isLoading = controlledLoading || queryLoading;
+  const isLoading = controlledLoading || contextLoading;
 
   // Extract date of joining from employee details
-  const joinedDate = employeeDetails?.date_of_joining || '';
+  const joinedDate = employee?.joiningDate || '';
 
   if (isLoading) {
     return (
@@ -58,21 +35,6 @@ const EmploymentDetails: React.FC<EmploymentDetailsProps> = ({ isLoading: contro
               <Skeleton className="h-5 w-32 mb-2" />
               <Skeleton className="h-6 w-40" />
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Employment Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="p-4 bg-red-50 text-red-700 rounded-md">
-            Failed to load employment details. Please try again later.
           </div>
         </CardContent>
       </Card>
